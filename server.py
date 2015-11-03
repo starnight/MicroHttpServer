@@ -30,9 +30,11 @@ class HTTPServer:
 			conn.close()
 
 	def _ParseHeader(self, conn, req):
+		'''Get the request message header.'''
 		print("\tParse header")
 
 	def _ParseBody(self, conn, req):
+		'''Get the request message body.'''
 		print("\tParse body")
 
 	def _BuildHeader(self, res):
@@ -40,14 +42,16 @@ class HTTPServer:
 		res.Header.append(["content-length", len(str.encode(res.Body))])
 
 	def _SendHeader(self, conn, res):
+		'''Send the response message header.'''
 		print("\tSend header")
-		conn.send(str.encode("{}/{} \r\n".format(res.Header[0][0], res.Header[0][1])))
+		conn.send(str.encode("{}/{} ".format(res.Header[0][0], res.Header[0][1])))
 		conn.send(str.encode("{}\r\n".format(res.Header[1][1])))
 		for i in range(2, len(res.Header)):
 			conn.send(str.encode("{}: {}\r\n".format(res.Header[i][0], res.Header[i][1])))
 		conn.send(str.encode("\r\n"))
 
 	def _SendBody(self, conn, res):
+		'''Send the response message body.'''
 		print("\tSend body")
 		conn.send(str.encode(res.Body))
 
