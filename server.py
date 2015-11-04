@@ -29,6 +29,8 @@ class HTTPServer:
 			conn.recv(1024)
 			request = Message()
 			response = Message()
+			self._ParseHeader(conn, request)
+			self._ParseBody(conn, request)
 			callback(request, response)
 			self._BuildHeader(response)
 			self._SendHeader(conn, response)
