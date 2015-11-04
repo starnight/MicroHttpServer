@@ -4,8 +4,13 @@ import socket
 import datetime
 
 class Message:
+	'''HTTP message class.'''
 	Header = [["HTTP", "1.1"], ["Status", "200 OK"]]
 	Body = None
+
+def _HelloPage(req, res):
+	'''Default Hello page which makes response message body.'''
+	res.Body = "<html><body>許功蓋 Hello {}</body></html>".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
 class HTTPServer:
 	def __init__(self, host="", port=8000):
@@ -16,14 +21,15 @@ class HTTPServer:
 	def Start(self):
 		self.sock.bind((self.HOST, self.PORT))
 
-	def Listen(self):
+	def Listen(self, callback=_HelloPage):
 		self.sock.listen(5)
 		while True:
 			conn, addr = self.sock.accept()
 			print("{} {} connected".format(str(datetime.datetime.now()), addr))
 			conn.recv(1024)
+			request = Message()
 			response = Message()
-			response.Body = "<html><body>許功蓋 Hello {}</body></html>".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+			callback(request, response)
 			self._BuildHeader(response)
 			self._SendHeader(conn, response)
 			self._SendBody(conn, response)
