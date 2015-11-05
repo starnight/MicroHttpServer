@@ -5,8 +5,9 @@ import datetime
 
 class Message:
 	'''HTTP message class.'''
-	Header = [["HTTP", "1.1"], ["Status", "200 OK"]]
-	Body = None
+	def __init__(self):
+		self.Header = []
+		self.Body = None
 
 def _HelloPage(req, res):
 	'''Default Hello page which makes response message body.'''
@@ -36,6 +37,8 @@ class HTTPServer:
 			self._SendHeader(conn, response)
 			self._SendBody(conn, response)
 			conn.close()
+			del request
+			del response
 
 	def _ParseHeader(self, conn, req):
 		'''Get the request message header.'''
@@ -46,6 +49,9 @@ class HTTPServer:
 		print("\tParse body")
 
 	def _BuildHeader(self, res):
+		res.Header.insert(0, ["HTTP", "1.1"])
+		if (len(res.Header) < 2) or (res.Header[1][0] == "Status"):
+			res.Header.insert(1, ["Status", "200 OK"])
 		res.Header.append(["content-type", "text/html; charset=UTF-8;"])
 		res.Header.append(["content-length", len(str.encode(res.Body))])
 
