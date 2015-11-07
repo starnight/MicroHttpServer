@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import socket
+import select
 import datetime
 
 class Message:
@@ -17,28 +18,64 @@ class HTTPServer:
 	def __init__(self, host="", port=8000):
 		self.HOST = host
 		self.PORT = port
+		self._insocks = []
+		self._outsocks = []
+		# Create server socket.
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		# Set the socket could be reused directly after this application be closed.
+		self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+		# Set the socket non-blocking.
+		self.sock.setblocking(0)
 
 	def Start(self):
 		self.sock.bind((self.HOST, self.PORT))
 
 	def Listen(self, callback=_HelloPage):
 		self.sock.listen(5)
-		while True:
-			conn, addr = self.sock.accept()
-			print("{} {} connected".format(str(datetime.datetime.now()), addr))
-			conn.recv(1024)
-			request = Message()
-			response = Message()
-			self._ParseHeader(conn, request)
-			self._ParseBody(conn, request)
-			callback(request, response)
-			self._BuildHeader(response)
-			self._SendHeader(conn, response)
-			self._SendBody(conn, response)
-			conn.close()
-			del request
-			del response
+		self._insocks.append(self.sock)
+		while len(self._insocks) > 0:
+			readable, writeable, exceptional = select.select(self._insocks, self._outsocks, self._insocks)
+			for s in readable:
+				if s is self.sock:
+					self._Accept(s)
+				else:
+					self._Request(s, callback)
+
+			for s in writeable:
+				s.send("")
+				self._outsocks.remove(s)
+				s.close()
+
+			for s in exceptional:
+				self._insocks.remove(s)
+				if s in self._outsocks:
+					self._outsocks.remove(s)
+				s.close()
+
+	def _Accept(self, conn):
+		conn, addr = self.sock.accept()
+		print("{} {} connected".format(str(datetime.datetime.now()), addr))
+		conn.setblocking(0)
+		self._insocks.append(conn)
+
+	def _Request(self, conn, callback):
+		conn.recv(1024)
+		request = Message()
+		response = Message()
+		self._ParseHeader(conn, request)
+		self._ParseBody(conn, request)
+		callback(request, response)
+		self._BuildHeader(response)
+		self._SendHeader(conn, response)
+		self._SendBody(conn, response)
+
+		self._insocks.remove(conn)
+		if conn in self._outsocks:
+			self._outsocks.remove(conn)
+
+		conn.close()
+		del request
+		del response
 
 	def _ParseHeader(self, conn, req):
 		'''Get the request message header.'''
@@ -49,6 +86,7 @@ class HTTPServer:
 		print("\tParse body")
 
 	def _BuildHeader(self, res):
+		'''Build basement response message header.'''
 		res.Header.insert(0, ["HTTP", "1.1"])
 		if (len(res.Header) < 2) or (res.Header[1][0] == "Status"):
 			res.Header.insert(1, ["Status", "200 OK"])
@@ -72,6 +110,10 @@ class HTTPServer:
 	def __del__(self):
 		print("Close socket")
 		self.sock.close()
+		for s in self._insocks:
+			s.close()
+		for s in self._outsocks:
+			s.close()
 
 if __name__ == "__main__":
 	server = HTTPServer(port=8000)
