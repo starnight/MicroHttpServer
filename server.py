@@ -38,8 +38,6 @@ class HTTPServer:
 		self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		# Set the socket non-blocking.
 		self.sock.setblocking(0)
-
-	def Start(self):
 		self.sock.bind((self.HOST, self.PORT))
 
 	def Listen(self, callback=_HelloPage):
@@ -176,8 +174,7 @@ class HTTPServer:
 			s.close()
 
 if __name__ == "__main__":
-	server = HTTPServer(port=8000)
 	print("Server is starting!!!")
-	server.Start()
+	server = HTTPServer(port=8000)
 	print("Server is started!!!")
 	server.Listen()
