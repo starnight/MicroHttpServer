@@ -163,8 +163,9 @@ class HTTPServer:
 		res.Header.insert(0, ["HTTP", "1.1"])
 		if (len(res.Header) < 2) or (res.Header[1][0] == "Status"):
 			res.Header.insert(1, ["Status", "200 OK"])
-		res.Header.append(["content-type", "text/html; charset=UTF-8;"])
-		res.Header.append(["content-length", len(str.encode(res.Body))])
+		res.Header.append(["Content-Type", "text/html; charset=UTF-8;"])
+		if res.Body is not None:
+			res.Header.append(["Content-Length", len(str.encode(res.Body))])
 
 	def _SendHeader(self, conn, res):
 		'''Send the response message header.'''
@@ -178,7 +179,8 @@ class HTTPServer:
 	def _SendBody(self, conn, res):
 		'''Send the response message body.'''
 		print("\tSend body")
-		conn.send(str.encode(res.Body))
+		if res.Body is not None:
+			conn.send(str.encode(res.Body))
 
 	def __del__(self):
 		print("Close socket")
