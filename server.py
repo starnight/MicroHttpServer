@@ -4,15 +4,27 @@ import socket
 import select
 import datetime
 
+MAX_HEADER_SIZE = 2048
+
+class HTTPError(Exception):
+	'''Define an HTTP error exception.'''
+	def __init__(self, message, error=1):
+		super(HTTPError, self).__init__(message)
+		self.error = error
+
 class Message:
 	'''HTTP message class.'''
 	def __init__(self):
 		self.Header = []
 		self.Body = None
+		self._Buf = None
 
 def _HelloPage(req, res):
 	'''Default Hello page which makes response message body.'''
-	res.Body = "<html><body>許功蓋 Hello {}</body></html>".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+	res.Body = "<html><body>許功蓋 Hello {}".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+	for h in req.Header:
+		res.Body += "<br>{}:{}".format(h[0], h[1])
+	res.Body += "</body></html>"
 
 class HTTPServer:
 	def __init__(self, host="", port=8000):
@@ -59,27 +71,75 @@ class HTTPServer:
 		self._insocks.append(conn)
 
 	def _Request(self, conn, callback):
-		conn.recv(1024)
 		request = Message()
 		response = Message()
-		self._ParseHeader(conn, request)
-		self._ParseBody(conn, request)
-		callback(request, response)
-		self._BuildHeader(response)
-		self._SendHeader(conn, response)
-		self._SendBody(conn, response)
+		try:
+			self._ParseHeader(conn, request)
+			self._ParseBody(conn, request)
+			callback(request, response)
+			self._BuildHeader(response)
+			self._SendHeader(conn, response)
+			self._SendBody(conn, response)
+		except HTTPError as e:
+			print("\t{}".format(e))
+		finally:
+			self._insocks.remove(conn)
+			if conn in self._outsocks:
+				self._outsocks.remove(conn)
 
-		self._insocks.remove(conn)
-		if conn in self._outsocks:
-			self._outsocks.remove(conn)
-
-		conn.close()
+			conn.close()
 		del request
 		del response
 
 	def _ParseHeader(self, conn, req):
 		'''Get the request message header.'''
 		print("\tParse header")
+
+		# Socket read into request message buffer.
+		self._Buf = conn.recv(MAX_HEADER_SIZE)
+
+		# Build the request line.
+		# Get method
+		s = 0
+		i = 3
+		while self._Buf[i] != ord(" "):
+			i += 1
+		req.Header.append(["Method", self._Buf[s:i].decode("ASCII")])
+
+		# Get URI
+		i += 1
+		s = i
+		while self._Buf[i] != ord(" "):
+			i += 1
+		req.Header.append(["URI", self._Buf[s:i].decode("ASCII")])
+
+		# Get HTTP version
+		i += 1
+		s = i
+		i += 10
+		if self._Buf[s:i].decode("ASCII") == "HTTP/1.1\r\n":
+			req.Header.append(["HTTP", "1.1"])
+		else:
+			raise HTTPError("Client is not HTTP/1.1 protocal")
+
+		# Build the request header feilds.
+		s = i
+		i += 2
+		while self._Buf[s:i].decode("ASCII") != "\r\n":
+			i += 1
+			while self._Buf[i-2:i].decode("ASCII") != "\r\n":
+				i += 1
+			hf = self._Buf[s:i-2]
+
+			j = 2
+			while hf[j-2:j].decode("ASCII") != ": ":
+				j += 1
+			req.Header.append([hf[0:j-2].decode("ASCII"), hf[j:].decode("ASCII")])
+
+			s = i
+			i += 2
+
+		return 0
 
 	def _ParseBody(self, conn, req):
 		'''Get the request message body.'''
