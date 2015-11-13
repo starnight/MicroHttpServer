@@ -163,7 +163,14 @@ class HTTPServer:
 		res.Header.insert(0, ["HTTP", "1.1"])
 		if (len(res.Header) < 2) or (res.Header[1][0] == "Status"):
 			res.Header.insert(1, ["Status", "200 OK"])
-		res.Header.append(["Content-Type", "text/html; charset=UTF-8;"])
+
+		checked = 0
+		for fv in res.Header:
+			if fv[0] == "Content-Type":
+				checked = 1
+		if checked != 1:
+			res.Header.append(["Content-Type", "text/html; charset=UTF-8;"])
+
 		if res.Body is not None:
 			res.Header.append(["Content-Length", len(str.encode(res.Body))])
 
