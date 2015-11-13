@@ -5,6 +5,7 @@ import select
 import datetime
 
 MAX_HEADER_SIZE = 2048
+MAX_BODY_SIZE = 4096
 
 class HTTPError(Exception):
 	'''Define an HTTP error exception.'''
@@ -18,12 +19,14 @@ class Message:
 		self.Header = []
 		self.Body = None
 		self._Buf = None
+		self._index = 0
 
 def _HelloPage(req, res):
 	'''Default Hello page which makes response message body.'''
 	res.Body = "<html><body>許功蓋 Hello {}".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 	for h in req.Header:
 		res.Body += "<br>{}:{}".format(h[0], h[1])
+	res.Body += "<br><br>{}".format(req.Body)
 	res.Body += "</body></html>"
 
 class HTTPServer:
@@ -73,7 +76,7 @@ class HTTPServer:
 		response = Message()
 		try:
 			self._ParseHeader(conn, request)
-			self._ParseBody(conn, request)
+			self._GetBody(conn, request)
 			callback(request, response)
 			self._BuildHeader(response)
 			self._SendHeader(conn, response)
@@ -94,28 +97,28 @@ class HTTPServer:
 		print("\tParse header")
 
 		# Socket read into request message buffer.
-		self._Buf = conn.recv(MAX_HEADER_SIZE)
+		req._Buf = conn.recv(MAX_HEADER_SIZE)
 
 		# Build the request line.
 		# Get method
 		s = 0
 		i = 3
-		while self._Buf[i] != ord(" "):
+		while req._Buf[i] != ord(" "):
 			i += 1
-		req.Header.append(["Method", self._Buf[s:i].decode("ASCII")])
+		req.Header.append(["Method", req._Buf[s:i].decode("ASCII")])
 
 		# Get URI
 		i += 1
 		s = i
-		while self._Buf[i] != ord(" "):
+		while req._Buf[i] != ord(" "):
 			i += 1
-		req.Header.append(["URI", self._Buf[s:i].decode("ASCII")])
+		req.Header.append(["URI", req._Buf[s:i].decode("ASCII")])
 
 		# Get HTTP version
 		i += 1
 		s = i
 		i += 10
-		if self._Buf[s:i].decode("ASCII") == "HTTP/1.1\r\n":
+		if req._Buf[s:i].decode("ASCII") == "HTTP/1.1\r\n":
 			req.Header.append(["HTTP", "1.1"])
 		else:
 			raise HTTPError("Client is not HTTP/1.1 protocal")
@@ -123,11 +126,11 @@ class HTTPServer:
 		# Build the request header feilds.
 		s = i
 		i += 2
-		while self._Buf[s:i].decode("ASCII") != "\r\n":
+		while req._Buf[s:i].decode("ASCII") != "\r\n":
 			i += 1
-			while self._Buf[i-2:i].decode("ASCII") != "\r\n":
+			while req._Buf[i-2:i].decode("ASCII") != "\r\n":
 				i += 1
-			hf = self._Buf[s:i-2]
+			hf = req._Buf[s:i-2]
 
 			j = 2
 			while hf[j-2:j].decode("ASCII") != ": ":
@@ -137,11 +140,23 @@ class HTTPServer:
 			s = i
 			i += 2
 
-		return 0
+		req._index = i
 
-	def _ParseBody(self, conn, req):
+	def _GetBody(self, conn, req):
 		'''Get the request message body.'''
 		print("\tParse body")
+		cl = 0
+		for fv in req.Header:
+			if fv[0] == "Content-Length":
+				cl = int(fv[1])
+				break
+
+		if cl > 0:
+			# Read more and concat if content length is bigger then read body.
+			while len(req._Buf)-req._index < cl:
+				req._Buf += conn.recv(MAX_BODY_SIZE)
+
+			req.Body = req._Buf[req._index:]
 
 	def _BuildHeader(self, res):
 		'''Build basement response message header.'''
