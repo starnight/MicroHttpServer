@@ -174,6 +174,8 @@ class HTTPServer:
 		if res.Body is not None:
 			res.Header.append(["Content-Length", len(str.encode(res.Body))])
 
+		res.Header.append(["Date", datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")])
+
 	def _SendHeader(self, conn, res):
 		'''Send the response message header.'''
 		print("\tSend header")
