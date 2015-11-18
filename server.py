@@ -168,11 +168,13 @@ class HTTPServer:
 		for fv in res.Header:
 			if fv[0] == "Content-Type":
 				checked = 1
-		if checked != 1:
+		if (checked != 1) and (res.Body is not None):
 			res.Header.append(["Content-Type", "text/html; charset=UTF-8;"])
 
 		if res.Body is not None:
 			res.Header.append(["Content-Length", len(str.encode(res.Body))])
+		else:
+			res.Header.append(["Content-Length", 0])
 
 		res.Header.append(["Date", datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")])
 
