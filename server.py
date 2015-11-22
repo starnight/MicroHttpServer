@@ -6,6 +6,7 @@ import datetime
 
 MAX_HEADER_SIZE = 2048
 MAX_BODY_SIZE = 4096
+HTTP_SERVER = "Simple PyHTTP Server"
 
 class HTTPError(Exception):
 	'''Define an HTTP error exception.'''
@@ -23,11 +24,16 @@ class Message:
 
 def _HelloPage(req, res):
 	'''Default Hello page which makes response message body.'''
+	# Build HTTP message body
 	res.Body = "<html><body>許功蓋 Hello {}".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 	for h in req.Header:
 		res.Body += "<br>{}:{}".format(h[0], h[1])
 	res.Body += "<br><br>{}".format(req.Body)
 	res.Body += "</body></html>"
+
+	# Build HTTP message header
+	res.Header.append(["Status", "201 Accepted"])
+	res.Header.append(["Content-Type", "text/html; charset=UTF-8;"])
 
 class HTTPServer:
 	def __init__(self, host="", port=8000):
@@ -161,7 +167,7 @@ class HTTPServer:
 	def _BuildHeader(self, res):
 		'''Build basement response message header.'''
 		res.Header.insert(0, ["HTTP", "1.1"])
-		if (len(res.Header) < 2) or (res.Header[1][0] == "Status"):
+		if (len(res.Header) < 2) or (res.Header[1][0] != "Status"):
 			res.Header.insert(1, ["Status", "200 OK"])
 
 		checked = 0
@@ -175,6 +181,13 @@ class HTTPServer:
 			res.Header.append(["Content-Length", len(str.encode(res.Body))])
 		else:
 			res.Header.append(["Content-Length", 0])
+
+		checked = 0
+		for fv in res.Header:
+			if fv[0] == "X-Powered-By"
+				checked = 1
+		if checked != 1:
+			res.Header.append(["X-Powered-By", HTTPServer])
 
 		res.Header.append(["Date", datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")])
 
