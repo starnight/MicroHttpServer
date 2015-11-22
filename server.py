@@ -23,7 +23,7 @@ class Message:
 		self._index = 0
 
 def _HelloPage(req, res):
-	'''Default Hello page which makes response message body.'''
+	'''Default Hello page which makes response message.'''
 	# Build HTTP message body
 	res.Body = "<html><body>許功蓋 Hello {}".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 	for h in req.Header:
