@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from server import HTTPServer
+from middleware import Routes
 from datetime import datetime
 
 def WellcomePage(req, res):
@@ -17,5 +18,8 @@ def WellcomePage(req, res):
 if __name__ == "__main__":
 	print("Server is starting!!!")
 	server = HTTPServer(port=8000)
+	routes = Routes()
+	routes.AddRoute("/", WellcomePage)
+	routes.AddRoute("/index.html", WellcomePage)
 	print("Server is started!!!")
-	server.Listen(WellcomePage)
+	server.Listen(routes.Dispatch)
