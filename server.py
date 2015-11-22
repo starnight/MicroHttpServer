@@ -191,7 +191,14 @@ class HTTPServer:
 		'''Send the response message body.'''
 		print("\tSend body")
 		if res.Body is not None:
-			conn.send(str.encode(res.Body))
+			buf = str.encode(res.Body)
+			size = len(buf)
+			totalsent = 0
+			while totalsent < size:
+				sent = conn.send(buf[totalsent:])
+				if sent == 0:
+					raise HTTPError("Send connection broken")
+				totalsent += sent
 
 	def __del__(self):
 		print("Close socket")
