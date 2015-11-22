@@ -32,7 +32,7 @@ def _HelloPage(req, res):
 	res.Body += "</body></html>"
 
 	# Build HTTP message header
-	res.Header.append(["Status", "201 Accepted"])
+	res.Header.append(["Status", "200 OK"])
 	res.Header.append(["Content-Type", "text/html; charset=UTF-8;"])
 
 class HTTPServer:
@@ -174,6 +174,7 @@ class HTTPServer:
 		for fv in res.Header:
 			if fv[0] == "Content-Type":
 				checked = 1
+				break
 		if (checked != 1) and (res.Body is not None):
 			res.Header.append(["Content-Type", "text/html; charset=UTF-8;"])
 
@@ -184,10 +185,11 @@ class HTTPServer:
 
 		checked = 0
 		for fv in res.Header:
-			if fv[0] == "X-Powered-By"
+			if fv[0] == "X-Powered-By":
 				checked = 1
+				break
 		if checked != 1:
-			res.Header.append(["X-Powered-By", HTTPServer])
+			res.Header.append(["X-Powered-By", HTTP_SERVER])
 
 		res.Header.append(["Date", datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")])
 
