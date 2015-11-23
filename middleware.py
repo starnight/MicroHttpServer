@@ -19,13 +19,30 @@ class Routes:
 				break
 
 		found = 0
+		# Check the route
 		for r in self._Routes:
 			if r[0] == uri:
 				r[1](req, res)
 				found = 1
 				break
+		# Check static files
+		if found != 1:
+			found = self._ReadStaticFiles(uri, res)
+		# It is really not found
 		if found != 1:
 			self._NotFound(req, res)
+
+	def _ReadStaticFiles(self, uri, res):
+		found = 0
+		try:
+			f = open("static/{}".format(uri), "r")
+			res.Body = f.read()
+			f.close()
+			found = 1
+		except:
+			pass
+
+		return found
 
 	def _NotFound(self, req, res):
 		'''Define the default error page for not found URI.'''
