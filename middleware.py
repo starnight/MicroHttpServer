@@ -34,13 +34,28 @@ class Routes:
 
 	def _ReadStaticFiles(self, uri, res):
 		found = 0
-		try:
-			f = open("static/{}".format(uri), "r")
-			res.Body = f.read()
-			f.close()
-			found = 1
-		except:
-			pass
+
+		# Prevent Path Traversal
+		depth = 0
+		for d in uri.split("/"):
+			if d == "..":
+				depth -= 1
+			elif d =="":
+				continue
+			else:
+				depth += 1
+			if depth < 0:
+				break
+
+		if depth >= 0:
+			# Try to open and load the static file.
+			try:
+				f = open("static/{}".format(uri), "r")
+				res.Body = f.read()
+				f.close()
+				found = 1
+			except:
+				pass
 
 		return found
 
