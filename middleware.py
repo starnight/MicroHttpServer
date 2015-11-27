@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 
+import mimetypes
+
 class Routes:
 	'''Define the feature of route for URIs.'''
 	def __init__(self):
 		self._Routes = []
+		mimetypes.init()
 
 	def AddRoute(self, uri, callback):
 		'''Add an URI into the route table.'''
@@ -50,9 +53,12 @@ class Routes:
 		if depth >= 0:
 			# Try to open and load the static file.
 			try:
-				f = open("static/{}".format(uri), "r")
+				filename = "static/{}".format(uri)
+				f = open(filename, "r")
 				res.Body = f.read()
 				f.close()
+				mime = mimetypes.guess_type(filename)[0]
+				res.Header.append(["Content-Type", mime])
 				found = 1
 			except:
 				pass
