@@ -2,7 +2,7 @@
 
 It is a really simple HTTP server for prototyping.
 
-For writing Micro HTTP Server, the developer has studied [eserv](https://code.google.com/p/eserv/source/browse/) and [Tiny HTTPd](http://tinyhttpd.cvs.sourceforge.net/viewvc/tinyhttpd/tinyhttpd/).
+For writing MicroHTTPServer, the developer has studied [eserv](https://code.google.com/p/eserv/source/browse/) and [Tiny HTTPd](http://tinyhttpd.cvs.sourceforge.net/viewvc/tinyhttpd/tinyhttpd/).
 
 ## Reference
 
