@@ -5,4 +5,5 @@ python:
 	- "3.4"
 	- "3.5"
 install:
-script: main.py
+script:
+	- python main.py
