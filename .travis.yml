@@ -5,6 +5,6 @@ python:
   - "3.4"
   - "3.5"
 before_script:
-  - python main.py
+  - python main.py &
 script:
   - python client.py
