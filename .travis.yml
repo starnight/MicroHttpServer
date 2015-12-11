@@ -4,6 +4,7 @@ python:
   - "3.3"
   - "3.4"
   - "3.5"
-install:
-script:
+before_script:
   - python main.py
+script:
+  - python client.py
