@@ -6,8 +6,7 @@ python:
   - "3.5"
 before_script:
   - python main.py &
-  - echo $!
-  - SERVER_PID = $!
+  - SERVER_PID=$!
 script:
   - python client.py
   - kill $SERVER_PID
