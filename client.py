@@ -24,8 +24,9 @@ class Client:
 class TestServer(unittest.TestCase):
 	def test_Scenario1(self):
 		cli = Client()
-		self.assertEqual(cli.test_Connect(), 1)
-		self.assertEqual(cli.test_Close(), 1)
+		for i in range(10):
+			self.assertEqual(cli.test_Connect(), 1)
+			self.assertEqual(cli.test_Close(), 1)
 
 if __name__ == "__main__":
 	unittest.main()

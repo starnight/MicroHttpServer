@@ -89,6 +89,8 @@ class HTTPServer:
 			self._SendBody(conn, response)
 		except HTTPError as e:
 			print("\t{}".format(e))
+		except Exception as e:
+			print("\t{}".format(e))
 		finally:
 			self._insocks.remove(conn)
 			if conn in self._outsocks:
