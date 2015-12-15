@@ -111,15 +111,27 @@ class HTTPServer:
 		# Get method
 		s = 0
 		i = 3
-		while req._Buf[i] != ord(" "):
-			i += 1
+		while True:
+			if len(req._Buf) > i:
+				if req._Buf[i] != ord(" "):
+					i += 1
+				else:
+					break
+			else:
+				raise HTTPError("Parse HTTP request method failed.")
 		req.Header.append(["Method", req._Buf[s:i].decode("ASCII")])
 
 		# Get URI
 		i += 1
 		s = i
-		while req._Buf[i] != ord(" "):
-			i += 1
+		while True:
+			if len(req._Buf) > i:
+				if req._Buf[i] != ord(" "):
+					i += 1
+				else:
+					break
+			else:
+				raise HTTPError("Parse HTTP request URI failed.")
 		req.Header.append(["URI", req._Buf[s:i].decode("ASCII")])
 
 		# Get HTTP version
@@ -129,7 +141,7 @@ class HTTPServer:
 		if req._Buf[s:i].decode("ASCII") == "HTTP/1.1\r\n":
 			req.Header.append(["HTTP", "1.1"])
 		else:
-			raise HTTPError("Client is not HTTP/1.1 protocal")
+			raise HTTPError("Client is not HTTP/1.1 protocal.")
 
 		# Build the request header feilds.
 		s = i
