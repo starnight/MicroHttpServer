@@ -9,5 +9,5 @@ before_script:
   - SERVER_PID=$!
   - echo $SERVER_PID
 script:
-  - python client.py
+  - python client.py -v
   - kill $SERVER_PID
