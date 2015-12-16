@@ -16,6 +16,12 @@ class Client:
 			print(Exception)
 
 		return connected
+
+	def test_RequstIndex(self):
+		res = None
+		self.conn.request("GET", "/")
+		res = self.conn.getresponse()
+		return res
 			
 	def test_Close(self):
 		self.conn.close()
@@ -26,6 +32,16 @@ class TestServer(unittest.TestCase):
 		cli = Client()
 		for i in range(10):
 			self.assertEqual(cli.test_Connect(), 1)
+			self.assertEqual(cli.test_Close(), 1)
+
+	def test_Scenario2(self):
+		for i in range(10):
+			cli = Client()
+			self.assertEqual(cli.test_Connect(), 1)
+			res = cli.test_RequstIndex()
+			self.assertIsNotNone(res)
+			self.assertEqual(res.status, 200)
+			self.assertEqual(res.read(22), b"<html><body>Hello!<br>")
 			self.assertEqual(cli.test_Close(), 1)
 
 if __name__ == "__main__":
