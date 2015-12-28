@@ -44,5 +44,15 @@ class TestServer(unittest.TestCase):
 			self.assertEqual(res.read(22), b"<html><body>Hello!<br>")
 			self.assertEqual(cli.test_Close(), 1)
 
+	def test_Scenario3(self):
+		for i in range(10):
+			cli = Client()
+			self.assertEqual(cli.test_Connect(), 1)
+			res = cli.test_GetRequst("/index.html")
+			self.assertIsNotNone(res)
+			self.assertEqual(res.status, 200)
+			self.assertEqual(res.read(22), b"<html><body>Hello!<br>")
+			self.assertEqual(cli.test_Close(), 1)
+
 if __name__ == "__main__":
 	unittest.main()
