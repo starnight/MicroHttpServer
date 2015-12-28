@@ -17,9 +17,9 @@ class Client:
 
 		return connected
 
-	def test_RequstIndex(self):
+	def test_GetRequst(self, url="/"):
 		res = None
-		self.conn.request("GET", "/")
+		self.conn.request("GET", url)
 		res = self.conn.getresponse()
 		return res
 			
@@ -38,7 +38,7 @@ class TestServer(unittest.TestCase):
 		for i in range(10):
 			cli = Client()
 			self.assertEqual(cli.test_Connect(), 1)
-			res = cli.test_RequstIndex()
+			res = cli.test_GetRequst()
 			self.assertIsNotNone(res)
 			self.assertEqual(res.status, 200)
 			self.assertEqual(res.read(22), b"<html><body>Hello!<br>")
