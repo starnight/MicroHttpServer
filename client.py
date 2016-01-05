@@ -48,10 +48,10 @@ class TestServer(unittest.TestCase):
 		for i in range(10):
 			cli = Client()
 			self.assertEqual(cli.test_Connect(), 1)
-			res = cli.test_GetRequst("/index.html")
+			res = cli.test_GetRequst("/index.htm")
 			self.assertIsNotNone(res)
-			self.assertEqual(res.status, 200)
-			self.assertEqual(res.read(22), b"<html><body>Hello!<br>")
+			self.assertEqual(res.status, 404)
+			self.assertEqual(res.read(22), b"")
 			self.assertEqual(cli.test_Close(), 1)
 
 if __name__ == "__main__":
