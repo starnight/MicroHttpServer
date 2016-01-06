@@ -6,7 +6,7 @@ import datetime
 
 MAX_HEADER_SIZE = 2048
 MAX_BODY_SIZE = 4096
-HTTP_SERVER = "Simple PyHTTP Server"
+HTTP_SERVER = "Micro PyHTTP Server"
 
 class HTTPError(Exception):
 	'''Define an HTTP error exception.'''
