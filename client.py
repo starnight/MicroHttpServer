@@ -2,14 +2,15 @@
 
 import unittest
 import http.client
+import sys
 
-url = "localhost:8000"
+server = "localhost:8000"
 
 class Client:
-	def test_Connect(self):
+	def test_Connect(self, server):
 		connected = 0
 		try:
-			self.conn = http.client.HTTPConnection(url)
+			self.conn = http.client.HTTPConnection(server)
 			self.conn.connect()
 			connected = 1
 		except Exception:
@@ -17,27 +18,32 @@ class Client:
 
 		return connected
 
-	def test_GetRequst(self, url="/"):
+	def test_GetRequst(self, uri="/"):
 		res = None
-		self.conn.request("GET", url)
+		self.conn.request("GET", uri)
 		res = self.conn.getresponse()
 		return res
-			
+
 	def test_Close(self):
 		self.conn.close()
 		return 1
 
 class TestServer(unittest.TestCase):
+	def setUp(self):
+		if len(sys.argv) >= 2:
+			server = sys.argv[1]
+			print(server)
+
 	def test_Scenario1(self):
 		cli = Client()
 		for i in range(10):
-			self.assertEqual(cli.test_Connect(), 1)
+			self.assertEqual(cli.test_Connect(server), 1)
 			self.assertEqual(cli.test_Close(), 1)
 
 	def test_Scenario2(self):
 		for i in range(10):
 			cli = Client()
-			self.assertEqual(cli.test_Connect(), 1)
+			self.assertEqual(cli.test_Connect(server), 1)
 			res = cli.test_GetRequst()
 			self.assertIsNotNone(res)
 			self.assertEqual(res.status, 200)
@@ -47,7 +53,7 @@ class TestServer(unittest.TestCase):
 	def test_Scenario3(self):
 		for i in range(10):
 			cli = Client()
-			self.assertEqual(cli.test_Connect(), 1)
+			self.assertEqual(cli.test_Connect(server), 1)
 			res = cli.test_GetRequst("/index.htm")
 			self.assertIsNotNone(res)
 			self.assertEqual(res.status, 404)
@@ -55,4 +61,7 @@ class TestServer(unittest.TestCase):
 			self.assertEqual(cli.test_Close(), 1)
 
 if __name__ == "__main__":
+	if len(sys.argv) >= 2:
+		server = sys.argv.pop()
+
 	unittest.main()
