@@ -5,9 +5,9 @@ python:
   - "3.4"
   - "3.5"
 before_script:
-  - python main.py &
-  - SERVER_PID=$!
-  - echo $SERVER_PID
+  - python py-version/main.py &
+  - SERVER_PYTHON_PID=$!
+  - echo $SERVER_PYTHON_PID
 script:
-  - python client.py -v
-  - kill $SERVER_PID
+  - python client.py localhost:8000 -v
+  - kill $SERVER_PYTHON_PID
