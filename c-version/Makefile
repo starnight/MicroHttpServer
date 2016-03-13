@@ -2,7 +2,7 @@ PROJ=microhttpserver
 
 CC=cc
 INCLUDES=-I.
-CFLAGS=$(INCLUDES)
+CFLAGS=$(INCLUDES) -Os
 SRCS=server.c
 
 all:
