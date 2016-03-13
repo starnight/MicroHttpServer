@@ -5,10 +5,12 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <fcntl.h>
 #include "server.h"
 
 void HTTPServerInit(HTTPServer *srv, uint16_t port) {
 	struct sockaddr_in srv_addr;
+	int flags;
 
 	/* Have a server socket. */
 	srv->sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -20,17 +22,25 @@ void HTTPServerInit(HTTPServer *srv, uint16_t port) {
 	srv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	/* Bind the server socket with the server address. */
 	bind(srv->sock, (struct sockaddr*) &srv_addr, sizeof(srv_addr));
+	/* Set the server socket non-blocking. */
+	flags = fcntl(srv->sock, F_GETFL, 0) | O_NONBLOCK;
+	fcntl(srv->sock, F_SETFL, flags);
 }
 
 void _HTTPServerAccept(HTTPServer *srv) {
 	struct sockaddr_in cli_addr;
 	int sockaddr_len = sizeof(cli_addr);
 	SOCKET clisock;
+	int flags;
 
 	/* Have the client socket and append it to the master socket queue. */
 	clisock = accept(srv->sock, (struct sockaddr*) &cli_addr, &sockaddr_len);
 	if(clisock != -1) {
 		FD_SET(clisock, &(srv->_sock_pool));
+		/* Set the client socket non-blocking. */
+		flags = fcntl(clisock, F_GETFL, 0) | O_NONBLOCK;
+		fcntl(clisock, F_SETFL, flags);
+		/* Set the max socket file descriptor. */
 		if(clisock > srv->_max_sock) srv->_max_sock = clisock;
 		printf("Accept 1 client.\n");
 	}
@@ -49,9 +59,19 @@ int _CheckLine(char *buf) {
 	return i;
 }
 
+int _CheckFieldSep(char *buf) {
+	int i = 0;
+
+	if((buf[i - 1] == ':') && (buf[i] == ' ')) {
+		i = 2;
+	}
+
+	return i;
+}
+
 int _ParseHeader(SOCKET clisock, HTTPReqMessage *req) {
 	int n;
-	int l;
+	int l, end;
 	int i = 0;
 	char *p;
 
@@ -88,8 +108,7 @@ int _ParseHeader(SOCKET clisock, HTTPReqMessage *req) {
 		n = recv(clisock, p + i, 8, 0);
 		for(i+=8; (n>0) && (i<MAX_HEADER_SIZE); i++) {
 			n = recv(clisock, p + i, 1, 0);
-			l = _CheckLine(p + i);
-			if(l > 0) {
+			if(l = _CheckLine(p + i)) {
 				if(l == 2) p[i - 1] = '\0';
 				p[i] = '\0';
 				break;
@@ -98,19 +117,37 @@ int _ParseHeader(SOCKET clisock, HTTPReqMessage *req) {
 
 		/* Parse other fields. */
 		if(n > 0) i += 1;
-		for(; (n>0) && (i<MAX_HEADER_SIZE); i++) {
+		req->Header.Fields[req->Header.Amount].key = p + i;
+		end = 0;
+		for(; (n>0) && (i<MAX_HEADER_SIZE) && (req->Header.Amount<MAX_HEADER_FIELDS); i++) {
 			n = recv(clisock, p + i, 1, 0);
+			/* Check field key name end. */
+			if(l = _CheckFieldSep(p + i)) {
+				p[i - 1] = '\0';
+				req->Header.Fields[req->Header.Amount].value = p + i + 1;
+			}
+
 			/* Check header end. */
-			if(i += _CheckLine(p + i)) {
-				if(i += _CheckLine(p + i)) {
-					break;
+			if(l = _CheckLine(p + i)) {
+				if(end == 0) {
+					if(l == 2) p[i - 1] = '\0';
+					p[i] = '\0';
+
+					/* CRLF have 2 characters, so check 2 times new line. */
+					end = 2;
+
+					/* Go to parse next header field. */
+					req->Header.Amount += 1;
+					req->Header.Fields[req->Header.Amount].key = p + i + 1;
 				}
 				else {
-					// To do: Parse this field.
+					/* Requset message header finished. */
+					break;
 				}
 			}
-			else
-				continue;
+			else {
+				if(end > 0) end -= 1;
+			}
 		}
 	}
 
@@ -118,7 +155,7 @@ int _ParseHeader(SOCKET clisock, HTTPReqMessage *req) {
 	return i;
 }
 
-int _ParseBody(SOCKET clisock, HTTPReqMessage *req) {
+int _GetBody(SOCKET clisock, HTTPReqMessage *req) {
 	int n = 1;
 	int i = 0;
 	char *p;
@@ -128,8 +165,6 @@ int _ParseBody(SOCKET clisock, HTTPReqMessage *req) {
 	for(i=0; (n>0) && (i<MAX_BODY_SIZE); i++) {
 		n = recv(clisock, p + i, 1, MSG_PEEK);
 	}
-
-	// To do: Parse body.
 
 	return i;
 }
@@ -147,7 +182,7 @@ void _HTTPServerRequest(SOCKET clisock, HTTPREQ_CALLBACK callback) {
 	response.Header.Amount = 0;
 	n = _ParseHeader(clisock, &request);
 	if(n > 0) {
-		n = _ParseBody(clisock, &request);
+		n = _GetBody(clisock, &request);
 		callback(&request, &response);
 		n = write(clisock, res_buf, response._index);
 	}
@@ -195,13 +230,14 @@ void HTTPServerListen(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 #define HTTPServerClose(srv) (close((srv)->sock))
 
 void _HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
-	int n, i = 0;
+	int n, i = 0, j;
 	char *p;
 	char header1[] = "HTTP/1.1 200 OK\r\nConnection: close\r\n";
 	char header2[] = "Content-Type: text/html; charset=UTF-8\r\n\r\n";
 	char body1[] = "<html><body>許功蓋 Hello <br>";
 	char body2[] = "</body></html>";
 
+	/* Build header. */
 	p = res->_buf;	
 	n = strlen(header1);
 	memcpy(p, header1, n);
@@ -213,11 +249,13 @@ void _HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
 	p += n;
 	i += n;
 	
+	/* Build body. */
 	n = strlen(body1);
 	memcpy(p, body1, n);
 	p += n;
 	i += n;
 
+	/* Echo request header into body. */
 	n = strlen(req->Header.Method);
 	memcpy(p, req->Header.Method, n);
 	p += n;
@@ -243,10 +281,26 @@ void _HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
 	p += n;
 	i += n;
 
-	n = strlen("<br>");
-	memcpy(p, "<br>", n);
-	p += n;
-	i += n;
+	for(j=0; j<req->Header.Amount; j++) {
+		n = strlen("<br>");
+		memcpy(p, "<br>", n);
+		p += n;
+		i += n;
+
+		n = strlen(req->Header.Fields[j].key);
+		memcpy(p, req->Header.Fields[j].key, n);
+		p += n;
+		i += n;
+
+		p[0] = ':'; p[1] = ' ';
+		p += 2;
+		i += 2;
+
+		n = strlen(req->Header.Fields[j].value);
+		memcpy(p, req->Header.Fields[j].value, n);
+		p += n;
+		i += n;
+	}
 
 	n = strlen(body2);
 	memcpy(p, body2, n);
