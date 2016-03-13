@@ -21,20 +21,45 @@ typedef struct _HTTPServer {
 	fd_set _sock_pool;
 } HTTPServer;
 
-typedef struct _HTTPHeader {
+typedef struct _HTTPHeaderField {
+	char *key;
+	char *value;
+} HTTPHeaderField;
+
+#ifndef MAX_HEADER_FIELDS
+#define MAX_HEADER_FIELDS  20
+#endif
+
+typedef struct _HTTPReqHeader {
 	char *Method;
 	char *URI;
 	char *Version;
-	char *ContentType;
-} HTTPHeader;
+	HTTPHeaderField Fields[MAX_HEADER_FIELDS];
+	unsigned int Amount;
+} HTTPReqHeader;
 
-typedef struct _HTTPMessage {
-	HTTPHeader Header;
+typedef struct _HTTPReqMessage {
+	HTTPReqHeader Header;
 	char *Body;
 	uint8_t *_buf;
 	uint16_t _index;
-} HTTPMessage;
+} HTTPReqMessage;
 
-typedef void (*HTTPREQ_CALLBACK)(HTTPMessage *, HTTPMessage *);
+typedef struct _HTTPResHeader {
+	char *Version;
+	char *StatusCode;
+	char *Description;
+	HTTPHeaderField Fields[MAX_HEADER_FIELDS];
+	unsigned int Amount;
+} HTTPResHeader;
+
+typedef struct _HTTPResMessage {
+	HTTPResHeader Header;
+	char *Body;
+	uint8_t *_buf;
+	uint16_t _index;
+} HTTPResMessage;
+
+typedef void (*HTTPREQ_CALLBACK)(HTTPReqMessage *, HTTPResMessage *);
 
 #endif

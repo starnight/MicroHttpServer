@@ -49,7 +49,7 @@ int _CheckLine(char *buf) {
 	return i;
 }
 
-int _ParseHeader(SOCKET clisock, HTTPMessage *req) {
+int _ParseHeader(SOCKET clisock, HTTPReqMessage *req) {
 	int n;
 	int l;
 	int i = 0;
@@ -118,7 +118,7 @@ int _ParseHeader(SOCKET clisock, HTTPMessage *req) {
 	return i;
 }
 
-int _ParseBody(SOCKET clisock, HTTPMessage *req) {
+int _ParseBody(SOCKET clisock, HTTPReqMessage *req) {
 	int n = 1;
 	int i = 0;
 	char *p;
@@ -138,10 +138,13 @@ void _HTTPServerRequest(SOCKET clisock, HTTPREQ_CALLBACK callback) {
 	uint8_t req_buf[MAX_HEADER_SIZE + MAX_BODY_SIZE];
 	uint8_t res_buf[MAX_HEADER_SIZE + MAX_BODY_SIZE];
 	int n;
-	HTTPMessage request, response;
+	HTTPReqMessage request;
+	HTTPResMessage response;
 
 	request._buf = req_buf;
+	request.Header.Amount = 0;
 	response._buf = res_buf;
+	response.Header.Amount = 0;
 	n = _ParseHeader(clisock, &request);
 	if(n > 0) {
 		n = _ParseBody(clisock, &request);
@@ -191,7 +194,7 @@ void HTTPServerListen(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 
 #define HTTPServerClose(srv) (close((srv)->sock))
 
-void _HelloPage(HTTPMessage *req, HTTPMessage *res) {
+void _HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
 	int n, i = 0;
 	char *p;
 	char header1[] = "HTTP/1.1 200 OK\r\nConnection: close\r\n";
