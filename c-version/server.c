@@ -1,6 +1,4 @@
-#include <stdint.h>
 #include <string.h>
-#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <netinet/in.h>
@@ -227,7 +225,6 @@ void HTTPServerListen(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 	}
 }
 
-#define HTTPServerClose(srv) (close((srv)->sock))
 
 void _HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
 	int n, i = 0, j;

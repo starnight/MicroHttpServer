@@ -1,6 +1,9 @@
 #ifndef __MICRO_HTTP_SERVER_H__
 #define __MICRO_HTTP_SERVER_H__
 
+#include <stdint.h>
+#include <unistd.h>
+
 #define MAX_HEADER_SIZE  2048
 #define MAX_BODY_SIZE    4096
 #ifndef MTS_PORT
@@ -61,5 +64,9 @@ typedef struct _HTTPResMessage {
 } HTTPResMessage;
 
 typedef void (*HTTPREQ_CALLBACK)(HTTPReqMessage *, HTTPResMessage *);
+
+void HTTPServerInit(HTTPServer *srv, uint16_t port);
+void HTTPServerListen(HTTPServer *srv, HTTPREQ_CALLBACK callback);
+#define HTTPServerClose(srv) (close((srv)->sock))
 
 #endif
