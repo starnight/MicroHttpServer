@@ -10,7 +10,7 @@ before_script:
   - echo Python Micro HTTP Server\'s PID $SERVER_PYTHON_PID
   - cd c-version
   - make clean; make
-  - ./microhttpserver
+  - ./microhttpserver &
   - echo C Micro HTTP Server\'s PID $SERVER_C_PID
 script:
   - python autotest/client.py localhost:8000
