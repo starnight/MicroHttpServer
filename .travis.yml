@@ -12,6 +12,7 @@ before_script:
   - cd ../c-version
   - make clean; make
   - ./microhttpserver &
+  - SERVER_C_PID=$!
   - echo C Micro HTTP Server\'s PID $SERVER_C_PID
   - cd ..
 script:
