@@ -7,7 +7,13 @@ python:
 before_script:
   - python py-version/main.py &
   - SERVER_PYTHON_PID=$!
-  - echo $SERVER_PYTHON_PID
+  - echo Python Micro HTTP Server's PID $SERVER_PYTHON_PID
+  - cd c-version
+  - make clean; make
+  - ./microhttpserver
+  - echo C Micro HTTP Server's PID $SERVER_C_PID
 script:
   - python autotest/client.py localhost:8000
   - kill $SERVER_PYTHON_PID
+  - python autotest/client.py localhost:8001
+  - kill $SERVER_C_PID
