@@ -2,7 +2,7 @@
 #define __MICRO_HTTP_SERVER_H__
 
 #include <stdint.h>
-#include <unistd.h>
+#include <stdlib.h>
 
 #define MAX_HEADER_SIZE  2048
 #define MAX_BODY_SIZE    4096
