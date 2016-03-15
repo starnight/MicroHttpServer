@@ -5,13 +5,15 @@ python:
   - "3.4"
   - "3.5"
 before_script:
-  - python py-version/main.py &
+  - cd py-version
+  - python main.py &
   - SERVER_PYTHON_PID=$!
   - echo Python Micro HTTP Server\'s PID $SERVER_PYTHON_PID
-  - cd c-version
+  - cd ../c-version
   - make clean; make
   - ./microhttpserver &
   - echo C Micro HTTP Server\'s PID $SERVER_C_PID
+  - cd ..
 script:
   - python autotest/client.py localhost:8000
   - kill $SERVER_PYTHON_PID
