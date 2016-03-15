@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include "server.h"
 
@@ -225,6 +224,8 @@ void HTTPServerListen(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 	}
 }
 
+#ifdef MICRO_HTTP_SERVER_EXAMPLE
+/* This is exmaple. */
 
 void _HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
 	int n, i = 0, j;
@@ -313,3 +314,5 @@ int main(void) {
 	HTTPServerClose(&srv);
 	return 0;
 }
+
+#endif

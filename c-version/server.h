@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #define MAX_HEADER_SIZE  2048
 #define MAX_BODY_SIZE    4096
