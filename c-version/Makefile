@@ -3,7 +3,7 @@ PROJ=microhttpserver
 CC=cc
 INCLUDES=-I.
 CFLAGS=$(INCLUDES) -Os
-SRCS=main.c server.c
+SRCS=main.c server.c middleware.c
 
 all:
 	$(CC) $(SRCS) $(CFLAGS) -o $(PROJ)

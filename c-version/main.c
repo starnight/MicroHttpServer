@@ -1,7 +1,8 @@
-#include "server.h"
 #include <string.h>
+#include "server.h"
+#include "middleware.h"
 
-void _HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
+void HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
 	int n, i = 0, j;
 	char *p;
 	char header1[] = "HTTP/1.1 200 OK\r\nConnection: close\r\n";
@@ -83,8 +84,10 @@ void _HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
 
 int main(void) {
 	HTTPServer srv;
+	AddRoute("/index.html", HelloPage);
+	AddRoute("/", HelloPage);
 	HTTPServerInit(&srv, MTS_PORT);
-	HTTPServerListen(&srv, _HelloPage);
+	HTTPServerListen(&srv, Dispatch);
 	HTTPServerClose(&srv);
 	return 0;
 }
