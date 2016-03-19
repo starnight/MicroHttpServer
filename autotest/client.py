@@ -60,6 +60,27 @@ class TestServer(unittest.TestCase):
 			self.assertEqual(res.read(22), b"")
 			self.assertEqual(cli.test_Close(), 1)
 
+	def test_Scenario4(self):
+		for i in range(10):
+			cli = Client()
+			self.assertEqual(cli.test_Connect(server), 1)
+			res = cli.test_GetRequst("/index.html")
+			self.assertIsNotNone(res)
+			self.assertEqual(res.status, 200)
+			self.assertEqual(res.read(22), b"<html><body>Hello!<br>")
+			self.assertEqual(cli.test_Close(), 1)
+
+	def test_Scenario5(self):
+		for i in range(10):
+			cli = Client()
+			self.assertEqual(cli.test_Connect(server), 1)
+			res = cli.test_GetRequst("sample.html")
+			self.assertIsNotNone(res)
+			self.assertEqual(res.status, 200)
+			pattern = "<html>\n<head>\n<meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\">\n</head>\n<body>\nThis is sample page.<br>\n許功蓋\n</body>\n</html>"
+			self.assertEqual(res.read(len(str.encode(pattern))), str.encode(pattern))
+			self.assertEqual(cli.test_Close(), 1)
+
 if __name__ == "__main__":
 	if len(sys.argv) >= 2:
 		server = sys.argv.pop()
