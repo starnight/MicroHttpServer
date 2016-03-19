@@ -8,7 +8,7 @@
 #define MAX_HTTP_ROUTES  10
 #endif
 #ifndef STATIC_FILE_FOLDER
-#define STATIC_FILE_FOLDER "static"
+#define STATIC_FILE_FOLDER "static/"
 #endif
 
 int AddRoute(char *, HTTPREQ_CALLBACK);

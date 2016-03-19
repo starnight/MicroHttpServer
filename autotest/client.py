@@ -74,7 +74,7 @@ class TestServer(unittest.TestCase):
 		for i in range(10):
 			cli = Client()
 			self.assertEqual(cli.test_Connect(server), 1)
-			res = cli.test_GetRequst("sample.html")
+			res = cli.test_GetRequst("/sample.html")
 			self.assertIsNotNone(res)
 			self.assertEqual(res.status, 200)
 			pattern = "<html>\n<head>\n<meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\">\n</head>\n<body>\nThis is sample page.<br>\n許功蓋\n</body>\n</html>"

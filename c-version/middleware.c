@@ -36,7 +36,7 @@ uint8_t _ReadStaticFiles(HTTPReqMessage *req, HTTPResMessage *res) {
 
 	FILE *fp;
 	int size;
-	char path[128];
+	char path[128] = {STATIC_FILE_FOLDER};
 
 	char header1[] = "HTTP/1.1 200 OK\r\nConnection: close\r\n";
 	char header2[] = "Content-Type: text/html; charset=UTF-8\r\n\r\n";
@@ -58,7 +58,7 @@ uint8_t _ReadStaticFiles(HTTPReqMessage *req, HTTPResMessage *res) {
 
 	if(depth >= 0) {
 		/* Try to open and load the static file. */
-		sprintf(path, "%s%s", STATIC_FILE_FOLDER, uri);
+		memcpy(path + strlen(STATIC_FILE_FOLDER), uri, strlen(uri));
 		fp = fopen(path, "r");
 		if(fp != NULL) {
 			fseek(fp, 0, SEEK_END);
