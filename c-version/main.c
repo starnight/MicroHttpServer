@@ -2,6 +2,19 @@
 #include "server.h"
 #include "middleware.h"
 
+/* The HTTP server of this process. */
+HTTPServer srv;
+
+#ifdef _PARSE_SIGNAL_
+#include <signal.h>
+
+#ifdef _PARSE_SIGNAL_INT_
+void SigRoutine_INT(int unused) {
+	HTTPServerClose(&srv);
+}
+#endif
+#endif
+
 void HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
 	int n, i = 0, j;
 	char *p;
@@ -83,7 +96,6 @@ void HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
 }
 
 int main(void) {
-	HTTPServer srv;
 	AddRoute("/index.html", HelloPage);
 	AddRoute("/", HelloPage);
 	HTTPServerInit(&srv, MTS_PORT);

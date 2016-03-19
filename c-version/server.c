@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 #include "server.h"
+#include <errno.h>
 
 void HTTPServerInit(HTTPServer *srv, uint16_t port) {
 	struct sockaddr_in srv_addr;
@@ -17,8 +18,12 @@ void HTTPServerInit(HTTPServer *srv, uint16_t port) {
 	srv_addr.sin_family = AF_INET;
 	srv_addr.sin_port = htons(port);
 	srv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	/* Set the server socket can reuse the address. */
+	setsockopt(srv->sock, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
 	/* Bind the server socket with the server address. */
-	bind(srv->sock, (struct sockaddr*) &srv_addr, sizeof(srv_addr));
+	if(bind(srv->sock, (struct sockaddr*) &srv_addr, sizeof(srv_addr)) == -1) {
+		exit(1);
+	}
 	/* Set the server socket non-blocking. */
 	flags = fcntl(srv->sock, F_GETFL, 0) | O_NONBLOCK;
 	fcntl(srv->sock, F_SETFL, flags);
@@ -224,9 +229,13 @@ void HTTPServerListen(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 	}
 }
 
+void HTTPServerClose(HTTPServer *srv) {
+	shutdown(srv->sock, SHUT_RDWR);
+	close((srv)->sock);
+}
+
 #ifdef MICRO_HTTP_SERVER_EXAMPLE
 /* This is exmaple. */
-
 void _HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
 	int n, i = 0, j;
 	char *p;
