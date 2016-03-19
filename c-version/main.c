@@ -7,7 +7,7 @@ void HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
 	char *p;
 	char header1[] = "HTTP/1.1 200 OK\r\nConnection: close\r\n";
 	char header2[] = "Content-Type: text/html; charset=UTF-8\r\n\r\n";
-	char body1[] = "<html><body>許功蓋 Hello <br>";
+	char body1[] = "<html><body>Hello!<br>許功蓋<br>";
 	char body2[] = "</body></html>";
 
 	/* Build header. */
