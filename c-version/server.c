@@ -1,5 +1,4 @@
 #include <string.h>
-#include <stdio.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <fcntl.h>
@@ -44,7 +43,7 @@ void _HTTPServerAccept(HTTPServer *srv) {
 		fcntl(clisock, F_SETFL, flags);
 		/* Set the max socket file descriptor. */
 		if(clisock > srv->_max_sock) srv->_max_sock = clisock;
-		printf("Accept 1 client.\n");
+		DebugMsg("Accept 1 client.\n");
 	}
 }
 
@@ -77,7 +76,7 @@ int _ParseHeader(SOCKET clisock, HTTPReqMessage *req) {
 	int i = 0;
 	char *p;
 
-	printf("\tParse Header\n");
+	DebugMsg("\tParse Header\n");
 	p = req->_buf;
 	/* GET, PUT ... and a white space are 3 charaters. */
 	n = recv(clisock, p, 3, 0);
@@ -162,7 +161,7 @@ int _GetBody(SOCKET clisock, HTTPReqMessage *req) {
 	int i = 0;
 	char *p;
 
-	printf("\tParse body\n");
+	DebugMsg("\tParse body\n");
 	p = req->_buf + req->_index;
 	for(i=0; (n>0) && (i<MAX_BODY_SIZE); i++) {
 		n = recv(clisock, p + i, 1, MSG_PEEK);
@@ -198,7 +197,7 @@ void HTTPServerListen(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 	uint16_t i;
 
 	/* Start server socket listening. */
-	printf("Listening\n");
+	DebugMsg("Listening\n");
 	listen(srv->sock, MAX_HTTP_CLIENT);
 
 	/* Append server socket to the master socket queue. */

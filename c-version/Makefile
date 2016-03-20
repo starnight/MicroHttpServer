@@ -2,7 +2,7 @@ PROJ=microhttpserver
 
 CC=cc
 INCLUDES=-I.
-CFLAGS=$(INCLUDES) -Os -D_PARSE_SIGNAL_ -D_PARSE_SIGNAL_INT_
+CFLAGS=$(INCLUDES) -Os -D_PARSE_SIGNAL_ -D_PARSE_SIGNAL_INT_ -DDEBUG_MSG
 SRCS=main.c server.c middleware.c
 
 all:

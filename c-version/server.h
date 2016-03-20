@@ -70,4 +70,11 @@ void HTTPServerInit(HTTPServer *, uint16_t);
 void HTTPServerListen(HTTPServer *, HTTPREQ_CALLBACK);
 void HTTPServerClose(HTTPServer *);
 
+#ifdef DEBUG_MSG
+#include <stdio.h>
+#define DebugMsg(...) (printf(__VA_ARGS__))
+#else
+#define DebugMsg(...)
+#endif
+
 #endif
