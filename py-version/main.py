@@ -22,4 +22,4 @@ if __name__ == "__main__":
 	routes.AddRoute("/", WellcomePage)
 	routes.AddRoute("/index.html", WellcomePage)
 	print("Server is started!!!")
-	server.Listen(routes.Dispatch)
+	server.RunLoop(routes.Dispatch)

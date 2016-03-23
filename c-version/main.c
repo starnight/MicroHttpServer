@@ -99,7 +99,7 @@ int main(void) {
 	AddRoute("/index.html", HelloPage);
 	AddRoute("/", HelloPage);
 	HTTPServerInit(&srv, MTS_PORT);
-	HTTPServerListen(&srv, Dispatch);
+	HTTPServerRunLoop(&srv, Dispatch);
 	HTTPServerClose(&srv);
 	return 0;
 }

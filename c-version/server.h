@@ -67,7 +67,11 @@ typedef struct _HTTPResMessage {
 typedef void (*HTTPREQ_CALLBACK)(HTTPReqMessage *, HTTPResMessage *);
 
 void HTTPServerInit(HTTPServer *, uint16_t);
-void HTTPServerListen(HTTPServer *, HTTPREQ_CALLBACK);
+void HTTPServerRun(HTTPServer *, HTTPREQ_CALLBACK);
+#define HTTPServerRunLoop(srv, callback) { \
+	while(1) { \
+		HTTPServerRun(srv, callback); \
+	}}
 void HTTPServerClose(HTTPServer *);
 
 #ifdef DEBUG_MSG

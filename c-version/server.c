@@ -26,6 +26,15 @@ void HTTPServerInit(HTTPServer *srv, uint16_t port) {
 	/* Set the server socket non-blocking. */
 	flags = fcntl(srv->sock, F_GETFL, 0) | O_NONBLOCK;
 	fcntl(srv->sock, F_SETFL, flags);
+
+	/* Start server socket listening. */
+	DebugMsg("Listening\n");
+	listen(srv->sock, MAX_HTTP_CLIENT);
+
+	/* Append server socket to the master socket queue. */
+	FD_SET(srv->sock, &(srv->_sock_pool));
+	/* The server socket's FD is max in the master socket queue for now. */
+	srv->_max_sock = srv->sock;
 }
 
 void _HTTPServerAccept(HTTPServer *srv) {
@@ -191,38 +200,26 @@ void _HTTPServerRequest(SOCKET clisock, HTTPREQ_CALLBACK callback) {
 	close(clisock);
 }
 
-void HTTPServerListen(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
-	SOCKET clisock;
+void HTTPServerRun(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 	fd_set readable;
 	uint16_t i;
 
-	/* Start server socket listening. */
-	DebugMsg("Listening\n");
-	listen(srv->sock, MAX_HTTP_CLIENT);
-
-	/* Append server socket to the master socket queue. */
-	FD_SET(srv->sock, &(srv->_sock_pool));
-	/* The server socket's FD is max in the master socket queue for now. */
-	srv->_max_sock = srv->sock;
-
-	while(1) {
-		/* Copy master socket queue to readable socket queue. */
-		readable = srv->_sock_pool;
-		/* Wait the flag of any socket in readable socket queue. */
-		select(srv->_max_sock+1, &readable, NULL, NULL, 0);
-		/* Go through the sockets in readable socket queue.  */
-		for(i=0; i<=srv->_max_sock; i++) {
-			if(FD_ISSET(i, &readable)) {
-				if(i == srv->sock) {
-					/* Accept when server socket has been connected. */
-					_HTTPServerAccept(srv);
-				}
-				else {
-					/* Deal the request from the client socket. */
-					_HTTPServerRequest(i, callback);
-					if(i >= srv->_max_sock) srv->_max_sock -= 1;
-					FD_CLR(i, &(srv->_sock_pool));
-				}
+	/* Copy master socket queue to readable socket queue. */
+	readable = srv->_sock_pool;
+	/* Wait the flag of any socket in readable socket queue. */
+	select(srv->_max_sock+1, &readable, NULL, NULL, 0);
+	/* Go through the sockets in readable socket queue.  */
+	for(i=0; i<=srv->_max_sock; i++) {
+		if(FD_ISSET(i, &readable)) {
+			if(i == srv->sock) {
+				/* Accept when server socket has been connected. */
+				_HTTPServerAccept(srv);
+			}
+			else {
+				/* Deal the request from the client socket. */
+				_HTTPServerRequest(i, callback);
+				if(i >= srv->_max_sock) srv->_max_sock -= 1;
+				FD_CLR(i, &(srv->_sock_pool));
 			}
 		}
 	}
@@ -318,7 +315,7 @@ void _HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
 int main(void) {
 	HTTPServer srv;
 	HTTPServerInit(&srv, MTS_PORT);
-	HTTPServerListen(&srv, _HelloPage);
+	while(1) { HTTPServerRun(&srv, _HelloPage); }
 	HTTPServerClose(&srv);
 	return 0;
 }

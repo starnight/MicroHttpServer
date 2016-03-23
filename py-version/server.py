@@ -49,27 +49,32 @@ class HTTPServer:
 		self.sock.setblocking(0)
 		self.sock.bind((self.HOST, self.PORT))
 
-	def Listen(self, callback=_HelloPage):
+		# Start server socket listening.
 		self.sock.listen(5)
 		self._insocks.append(self.sock)
-		while len(self._insocks) > 0:
-			readable, writeable, exceptional = select.select(self._insocks, self._outsocks, self._insocks)
-			for s in readable:
-				if s is self.sock:
-					self._Accept(s)
-				else:
-					self._Request(s, callback)
 
-			for s in writeable:
-				s.send("")
+	def Run(self, callback):
+		readable, writeable, exceptional = select.select(self._insocks, self._outsocks, self._insocks)
+		for s in readable:
+			if s is self.sock:
+				self._Accept(s)
+			else:
+				self._Request(s, callback)
+
+		for s in writeable:
+			s.send("")
+			self._outsocks.remove(s)
+			s.close()
+
+		for s in exceptional:
+			self._insocks.remove(s)
+			if s in self._outsocks:
 				self._outsocks.remove(s)
-				s.close()
+			s.close()
 
-			for s in exceptional:
-				self._insocks.remove(s)
-				if s in self._outsocks:
-					self._outsocks.remove(s)
-				s.close()
+	def RunLoop(self, callback):
+		while True:
+			self.Run(callback)
 
 	def _Accept(self, conn):
 		conn, addr = self.sock.accept()
@@ -241,4 +246,5 @@ if __name__ == "__main__":
 	print("Server is starting!!!")
 	server = HTTPServer(port=8000)
 	print("Server is started!!!")
-	server.Listen()
+	while True:
+		server.Run(_HelloPage)
