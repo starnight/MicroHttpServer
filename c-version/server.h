@@ -34,8 +34,16 @@ typedef struct _HTTPHeaderField {
 #define MAX_HEADER_FIELDS  20
 #endif
 
+typedef enum {
+	HTTP_GET,
+	HTTP_POST,
+	HTTP_PUT,
+	HTTP_DELETE,
+	HTTP_NUM_METHOD
+} HTTPMethod;
+
 typedef struct _HTTPReqHeader {
-	char *Method;
+	HTTPMethod Method;
 	char *URI;
 	char *Version;
 	HTTPHeaderField Fields[MAX_HEADER_FIELDS];

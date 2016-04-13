@@ -5,6 +5,7 @@
 
 /* Route */
 typedef struct _Route {
+	HTTPMethod method;
 	char *uri;
 	HTTPREQ_CALLBACK callback;
 } Route;
@@ -13,8 +14,9 @@ Route routes[MAX_HTTP_ROUTES];
 int routes_used = 0;
 
 /* Add an URI and the corresponding callback into the route table. */
-int AddRoute(char *uri, HTTPREQ_CALLBACK callback) {
+int AddRoute(HTTPMethod method, char *uri, HTTPREQ_CALLBACK callback) {
 	if(routes_used < MAX_HTTP_ROUTES) {
+		routes[routes_used].method = method;
 		routes[routes_used].uri = uri;
 		routes[routes_used].callback = callback;
 		routes_used++;
@@ -56,7 +58,7 @@ uint8_t _ReadStaticFiles(HTTPReqMessage *req, HTTPResMessage *res) {
 		}
 	}
 
-	if(depth >= 0) {
+	if((depth >= 0) && (uri[i-1] != '/')) {
 		/* Try to open and load the static file. */
 		memcpy(path + strlen(STATIC_FILE_FOLDER), uri, strlen(uri));
 		fp = fopen(path, "r");
@@ -101,31 +103,30 @@ void _NotFound(HTTPReqMessage *req, HTTPResMessage *res) {
 
 /* Dispatch an URI according to the route table. */
 void Dispatch(HTTPReqMessage *req, HTTPResMessage *res) {
-	uint16_t i, j;
+	uint16_t i;
 	size_t n;
-	char *req_uri;
+	char *req_uri = req->Header.URI;
 	uint8_t found = 0;
 
 	/* Check the routes. */
-	req_uri = req->Header.URI;
 	for(i=0; i<routes_used; i++) {
-		n = strlen(routes[i].uri);
-		for(j=0; j<n; j++) {
-			if((req_uri[j] != '\0') && (req_uri[j] == routes[i].uri[j])) {
+		/* Compare method. */
+		if(req->Header.Method == routes[i].method) {
+			/* Compare URI. */
+			n = strlen(routes[i].uri);
+			if(memcmp(req_uri, routes[i].uri, n) == 0)
 				found = 1;
+			else
+				continue;
+
+			if((found == 1) && ((req_uri[n] == '\0') || (req_uri[n] == '\?'))) {
+				/* Found and dispatch the callback function. */
+				routes[i].callback(req, res);
+				break;
 			}
 			else {
 				found = 0;
-				break;
 			}
-		}
-
-		if((found == 1) && (req_uri[j] == '\0')) {
-			routes[i].callback(req, res);
-			break;
-		}
-		else {
-			found = 0;
 		}
 	}
 

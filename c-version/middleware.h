@@ -11,7 +11,7 @@
 #define STATIC_FILE_FOLDER "static/"
 #endif
 
-int AddRoute(char *, HTTPREQ_CALLBACK);
+int AddRoute(HTTPMethod, char *, HTTPREQ_CALLBACK);
 void Dispatch(HTTPReqMessage *, HTTPResMessage *);
 
 #endif

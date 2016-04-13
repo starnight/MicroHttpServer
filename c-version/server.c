@@ -79,6 +79,23 @@ int _CheckFieldSep(char *buf) {
 	return i;
 }
 
+HTTPMethod HaveMethod(char *method) {
+	HTTPMethod m;
+
+	if(memcmp(method, "GET", 3) == 0)
+		m = HTTP_GET;
+	else if(memcmp(method, "POST", 4) == 0)
+		m = HTTP_POST;
+	else if(memcmp(method, "PUT", 3) == 0)
+		m = HTTP_PUT;
+	else if(memcmp(method, "DELETE", 6) == 0)
+		m = HTTP_DELETE;
+	else
+		m = HTTP_GET;
+
+	return m;
+}
+
 int _ParseHeader(SOCKET clisock, HTTPReqMessage *req) {
 	int n;
 	int l, end;
@@ -91,7 +108,6 @@ int _ParseHeader(SOCKET clisock, HTTPReqMessage *req) {
 	n = recv(clisock, p, 3, 0);
 	if(n == 3) {
 		/* Parse method. */
-		req->Header.Method = p;
 		for(i = 3; n>0; i++) {
 			n = recv(clisock, p + i, 1, 0);
 			if(p[i] == ' ') {
@@ -99,6 +115,7 @@ int _ParseHeader(SOCKET clisock, HTTPReqMessage *req) {
 				break;
 			}
 		}
+		req->Header.Method = HaveMethod(p);
 
 		/* Parse URI. */
 		if(n > 0) i += 1;
@@ -168,12 +185,24 @@ int _ParseHeader(SOCKET clisock, HTTPReqMessage *req) {
 int _GetBody(SOCKET clisock, HTTPReqMessage *req) {
 	int n = 1;
 	int i = 0;
+	unsigned int len = 0;
 	char *p;
 
 	DebugMsg("\tParse body\n");
-	p = req->_buf + req->_index;
-	for(i=0; (n>0) && (i<MAX_BODY_SIZE); i++) {
-		n = recv(clisock, p + i, 1, MSG_PEEK);
+	req->Body = req->_buf + req->_index;
+
+	if(req->Header.Method == HTTP_POST) {
+		for(i=0; i<req->Header.Amount; i++) {
+			if(memcmp(req->Header.Fields[i].key, "Content-Length", 15) == 0) {
+				len = atoi(req->Header.Fields[i].value);
+				break;
+			}
+		}
+		p = req->Body;
+		if(len > MAX_BODY_SIZE) len = MAX_BODY_SIZE;
+		for(i=0; (n>0) && (i<len); i+=n) {
+			n = recv(clisock, p + i, len, MSG_PEEK);
+		}
 	}
 
 	return i;
@@ -259,8 +288,8 @@ void _HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
 	i += n;
 
 	/* Echo request header into body. */
-	n = strlen(req->Header.Method);
-	memcpy(p, req->Header.Method, n);
+	n = strlen(req->_buf);
+	memcpy(p, req->_buf, n);
 	p += n;
 	i += n;
 
