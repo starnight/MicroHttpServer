@@ -85,19 +85,31 @@ void HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
 char *itoa(int n, char *s, int b) {
 	char digits[] = "0123456789ABCDEF";
 	uint8_t i = 0;
+	int shift = n;
+	char *p;
+
+	p = s;
 
 	/* Deal the sign. */
 	if(n < 0) {
-		s[i++] = '-';
+		s[0] = '-';
 		n = -n;
+		p += 1;
 	}
 
 	/* Convert integer to characters. */
-	do {
-		s[i++] = digits[n % b];
-	} while((n /= b) > 0);
+	if(shift == 0)
+		i = 1;
+	else
+		for(; shift > 0; i++)
+			shift /= b;
 
-	s[i] = '\0';
+	p[i] = '\0';
+
+	do {
+		i--;
+		p[i] = digits[n % b];
+	} while((n /= b) > 0);
 
 	return s;
 }
@@ -109,8 +121,7 @@ int fibnacci(int l) {
 	if(l == 2)
 		sum = 1;
 	else {
-		l--;
-		for(sum = 0; l > 0; l--) {
+		for(l -= 2; l > 0; l--) {
 			sum = ppre + pre;
 			ppre = pre;
 			pre = sum;

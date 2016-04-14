@@ -205,6 +205,8 @@ int _GetBody(SOCKET clisock, HTTPReqMessage *req) {
 		}
 	}
 
+	req->Body[i] = '\0';
+
 	return i;
 }
 
