@@ -8,24 +8,26 @@ class Routes:
 		self._Routes = []
 		mimetypes.init()
 
-	def AddRoute(self, uri, callback):
+	def AddRoute(self, method, uri, callback):
 		'''Add an URI into the route table.'''
-		self._Routes.append([uri, callback])
+		self._Routes.append([method, uri, callback])
 
 	def Dispatch(self, req, res):
 		'''Dispatch an URI according to the route table.'''
+		method = ""
 		uri = ""
 		for fv in req.Header:
-			if fv[0] == "URI":
+			if fv[0] == "Method":
+				method = fv[1]
+			elif fv[0] == "URI":
 				uri = fv[1]
-				found = 1
 				break
 
 		found = 0
 		# Check the route
 		for r in self._Routes:
-			if r[0] == uri:
-				r[1](req, res)
+			if (r[0] == method) and (r[1] == uri):
+				r[2](req, res)
 				found = 1
 				break
 		# Check static files

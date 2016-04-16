@@ -79,7 +79,7 @@ class HTTPServer:
 	def _Accept(self, conn):
 		conn, addr = self.sock.accept()
 		print("{} {} connected".format(str(datetime.datetime.now()), addr))
-		conn.setblocking(0)
+		#conn.setblocking(0)
 		self._insocks.append(conn)
 
 	def _Request(self, conn, callback):
@@ -110,50 +110,45 @@ class HTTPServer:
 		print("\tParse header")
 
 		# Socket read into request message buffer.
-		req._Buf = conn.recv(MAX_HEADER_SIZE)
+		req._Buf = conn.recv(4)
 
 		# Build the request line.
 		# Get method
 		s = 0
 		i = 3
 		while True:
-			if len(req._Buf) > i:
-				if req._Buf[i] != ord(" "):
-					i += 1
-				else:
-					break
+			if req._Buf[i] != ord(" "):
+				req._Buf += conn.recv(1)
+				i += 1
 			else:
-				raise HTTPError("Parse HTTP request method failed.")
+				break
 		req.Header.append(["Method", req._Buf[s:i].decode("ASCII")])
 
 		# Get URI
-		i += 1
-		s = i
+		s = i + 1
 		while True:
-			if len(req._Buf) > i:
-				if req._Buf[i] != ord(" "):
-					i += 1
-				else:
-					break
-			else:
-				raise HTTPError("Parse HTTP request URI failed.")
+			req._Buf += conn.recv(1)
+			i += 1
+			if req._Buf[i] == ord(" "):
+				break
 		req.Header.append(["URI", req._Buf[s:i].decode("ASCII")])
 
 		# Get HTTP version
-		i += 1
-		s = i
+		s = i + 1
+		req._Buf += conn.recv(10)
 		i += 10
-		if req._Buf[s:i].decode("ASCII") == "HTTP/1.1\r\n":
+		if req._Buf[s:i+1].decode("ASCII") == "HTTP/1.1\r\n":
 			req.Header.append(["HTTP", "1.1"])
 		else:
 			raise HTTPError("Client is not HTTP/1.1 protocal.")
 
 		# Build the request header feilds.
-		s = i
-		i += 2
-		while req._Buf[s:i].decode("ASCII") != "\r\n":
-			i += 1
+		s = i + 1
+		req._Buf += conn.recv(2)
+		i += 3
+		while req._Buf[i-2:i].decode("ASCII") != "\r\n":
 			while req._Buf[i-2:i].decode("ASCII") != "\r\n":
+				req._Buf += conn.recv(1)
 				i += 1
 			hf = req._Buf[s:i-2]
 
@@ -163,6 +158,7 @@ class HTTPServer:
 			req.Header.append([hf[0:j-2].decode("ASCII"), hf[j:].decode("ASCII")])
 
 			s = i
+			req._Buf += conn.recv(2)
 			i += 2
 
 		req._index = i
@@ -171,17 +167,24 @@ class HTTPServer:
 		'''Get the request message body.'''
 		print("\tParse body")
 		cl = 0
-		for fv in req.Header:
-			if fv[0] == "Content-Length":
-				cl = int(fv[1])
-				break
+		i = 0
+		if req.Header[0][1] == "POST":
+			for fv in req.Header:
+				if fv[0] == "Content-Length":
+					cl = int(fv[1])
+					break
 
-		if cl > 0:
-			# Read more and concat if content length is bigger then read body.
-			while len(req._Buf)-req._index < cl:
-				req._Buf += conn.recv(MAX_BODY_SIZE)
+			if cl > MAX_BODY_SIZE:
+				cl = MAX_BODY_SIZE
+			buf = b""
+			while i < cl:
+				# Read more and concat if content length is bigger then read.
+				buf += conn.recv(cl)
+				i = len(buf)
+			req._Buf += buf
 
-			req.Body = req._Buf[req._index:]
+		req.Body = req._Buf[req._index:]
+		req._index += i
 
 	def _BuildHeader(self, res):
 		'''Build basement response message header.'''
