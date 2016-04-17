@@ -1,5 +1,6 @@
 #include <string.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <fcntl.h>
 #include "server.h"
@@ -32,7 +33,9 @@ void HTTPServerInit(HTTPServer *srv, uint16_t port) {
 	listen(srv->sock, MAX_HTTP_CLIENT);
 
 	/* Append server socket to the master socket queue. */
-	FD_SET(srv->sock, &(srv->_sock_pool));
+	FD_ZERO(&(srv->_read_sock_pool));
+	FD_ZERO(&(srv->_write_sock_pool));
+	FD_SET(srv->sock, &(srv->_read_sock_pool));
 	/* The server socket's FD is max in the master socket queue for now. */
 	srv->_max_sock = srv->sock;
 }
@@ -46,13 +49,15 @@ void _HTTPServerAccept(HTTPServer *srv) {
 	/* Have the client socket and append it to the master socket queue. */
 	clisock = accept(srv->sock, (struct sockaddr*) &cli_addr, &sockaddr_len);
 	if(clisock != -1) {
-		FD_SET(clisock, &(srv->_sock_pool));
+		FD_SET(clisock, &(srv->_read_sock_pool));
 		/* Set the client socket non-blocking. */
-		flags = fcntl(clisock, F_GETFL, 0) | O_NONBLOCK;
-		fcntl(clisock, F_SETFL, flags);
+		//flags = fcntl(clisock, F_GETFL, 0) | O_NONBLOCK;
+		//fcntl(clisock, F_SETFL, flags);
 		/* Set the max socket file descriptor. */
 		if(clisock > srv->_max_sock) srv->_max_sock = clisock;
-		DebugMsg("Accept 1 client.\n");
+		DebugMsg("Accept 1 client. %s:%d\n",
+					inet_ntoa(cli_addr.sin_addr),
+					(int)ntohs(cli_addr.sin_port));
 	}
 }
 
@@ -201,7 +206,7 @@ int _GetBody(SOCKET clisock, HTTPReqMessage *req) {
 		p = req->Body;
 		if(len > MAX_BODY_SIZE) len = MAX_BODY_SIZE;
 		for(i=0; (n>0) && (i<len); i+=n) {
-			n = recv(clisock, p + i, len, MSG_PEEK);
+			n = recv(clisock, p + i, (len-i), MSG_PEEK);
 		}
 	}
 
@@ -227,18 +232,17 @@ void _HTTPServerRequest(SOCKET clisock, HTTPREQ_CALLBACK callback) {
 		callback(&request, &response);
 		n = write(clisock, res_buf, response._index);
 	}
-	shutdown(clisock, SHUT_RDWR);
-	close(clisock);
 }
 
 void HTTPServerRun(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
-	fd_set readable;
+	fd_set readable, writeable;
 	uint16_t i;
 
-	/* Copy master socket queue to readable socket queue. */
-	readable = srv->_sock_pool;
+	/* Copy master socket queue to readable, writeable socket queue. */
+	readable = srv->_read_sock_pool;
+	writeable = srv->_write_sock_pool;
 	/* Wait the flag of any socket in readable socket queue. */
-	select(srv->_max_sock+1, &readable, NULL, NULL, 0);
+	select(srv->_max_sock+1, &readable, &writeable, NULL, 0);
 	/* Go through the sockets in readable socket queue.  */
 	for(i=0; i<=srv->_max_sock; i++) {
 		if(FD_ISSET(i, &readable)) {
@@ -250,8 +254,14 @@ void HTTPServerRun(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 				/* Deal the request from the client socket. */
 				_HTTPServerRequest(i, callback);
 				if(i >= srv->_max_sock) srv->_max_sock -= 1;
-				FD_CLR(i, &(srv->_sock_pool));
+				FD_SET(i, &(srv->_write_sock_pool));
+				FD_CLR(i, &(srv->_read_sock_pool));
 			}
+		}
+		if(FD_ISSET(i, &writeable)) {
+			shutdown(i, SHUT_RDWR);
+			close(i);
+			FD_CLR(i, &(srv->_write_sock_pool));
 		}
 	}
 }

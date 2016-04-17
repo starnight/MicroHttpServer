@@ -22,7 +22,8 @@ typedef int SOCKET;
 typedef struct _HTTPServer {
 	SOCKET sock;
 	SOCKET _max_sock;
-	fd_set _sock_pool;
+	fd_set _read_sock_pool;
+	fd_set _write_sock_pool;
 } HTTPServer;
 
 typedef struct _HTTPHeaderField {
