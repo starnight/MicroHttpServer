@@ -218,7 +218,7 @@ int _GetBody(SOCKET clisock, HTTPReqMessage *req) {
 void _HTTPServerRequest(SOCKET clisock, HTTPREQ_CALLBACK callback) {
 	uint8_t req_buf[MAX_HEADER_SIZE + MAX_BODY_SIZE];
 	uint8_t res_buf[MAX_HEADER_SIZE + MAX_BODY_SIZE];
-	int n;
+	int n, i;
 	HTTPReqMessage request;
 	HTTPResMessage response;
 
@@ -230,7 +230,12 @@ void _HTTPServerRequest(SOCKET clisock, HTTPREQ_CALLBACK callback) {
 	if(n > 0) {
 		n = _GetBody(clisock, &request);
 		callback(&request, &response);
-		n = write(clisock, res_buf, response._index);
+		/* Write all response. */
+		i = 0;
+		do {
+			n = write(clisock, res_buf, response._index - i);
+			i += n;
+		} while((n > 0) && (i < response._index));
 	}
 }
 
