@@ -11,7 +11,7 @@ void HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
 	char body2[] = "</body></html>";
 
 	/* Build header. */
-	p = res->_buf;	
+	p = (char *)res->_buf;
 	n = strlen(header1);
 	memcpy(p, header1, n);
 	p += n;
@@ -29,7 +29,7 @@ void HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
 	i += n;
 
 	/* Echo request header into body. */
-	n = strlen(req->_buf);
+	n = strlen((char *)req->_buf);
 	memcpy(p, req->_buf, n);
 	p += n;
 	i += n;
@@ -140,7 +140,7 @@ void Fib(HTTPReqMessage *req, HTTPResMessage *res) {
 	char *str;
 
 	/* Build header. */
-	p = res->_buf;	
+	p = (char *)res->_buf;
 	n = strlen(header1);
 	memcpy(p, header1, n);
 	p += n;
@@ -152,7 +152,7 @@ void Fib(HTTPReqMessage *req, HTTPResMessage *res) {
 	i += n;
 
 	/* Build body. */
-	str = strstr(req->Body, "Level=");
+	str = strstr((char *)req->Body, "Level=");
 	if(str != NULL) {
 		l = atoi(str + 6);
 		n = strlen(itoa(fibnacci(l), p, 10));

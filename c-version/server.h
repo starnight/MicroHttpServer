@@ -53,7 +53,7 @@ typedef struct _HTTPReqHeader {
 
 typedef struct _HTTPReqMessage {
 	HTTPReqHeader Header;
-	char *Body;
+	uint8_t *Body;
 	uint8_t *_buf;
 	uint16_t _index;
 } HTTPReqMessage;
@@ -68,7 +68,7 @@ typedef struct _HTTPResHeader {
 
 typedef struct _HTTPResMessage {
 	HTTPResHeader Header;
-	char *Body;
+	uint8_t *Body;
 	uint8_t *_buf;
 	uint16_t _index;
 } HTTPResMessage;

@@ -80,9 +80,9 @@ void HTTPServerInit(HTTPServer *srv, uint16_t port) {
 
 void _HTTPServerAccept(HTTPServer *srv) {
 	struct sockaddr_in cli_addr;
-	int sockaddr_len = sizeof(cli_addr);
+	socklen_t sockaddr_len = sizeof(cli_addr);
 	SOCKET clisock;
-	int flags;
+	//int flags;
 	unsigned int i;
 
 	/* Have the client socket and append it to the master socket queue. */
@@ -154,7 +154,7 @@ int _ParseHeader(SOCKET clisock, HTTPReqMessage *req) {
 	char *p;
 
 	DebugMsg("\tParse Header\n");
-	p = req->_buf;
+	p = (char *)req->_buf;
 	/* GET, PUT ... and a white space are 3 charaters. */
 	n = recv(clisock, p, 3, 0);
 	if(n == 3) {
@@ -237,7 +237,7 @@ int _GetBody(SOCKET clisock, HTTPReqMessage *req) {
 	int n = 1;
 	int i = 0;
 	unsigned int len = 0;
-	char *p;
+	uint8_t *p;
 
 	DebugMsg("\tParse body\n");
 	req->Body = req->_buf + req->_index;
