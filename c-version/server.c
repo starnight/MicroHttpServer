@@ -286,7 +286,7 @@ void _HTTPServerRequest(HTTPReq *hr, HTTPREQ_CALLBACK callback) {
 
 void HTTPServerRun(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 	fd_set readable, writeable;
-	SOCKET *s;
+	//SOCKET *s;
 	uint16_t i;
 
 	/* Copy master socket queue to readable, writeable socket queue. */
@@ -296,22 +296,22 @@ void HTTPServerRun(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 	select(srv->_max_sock+1, &readable, &writeable, NULL, 0);
 	/* Check sockets in HTTP client requests pool are readable. */
 	for(i=0; i<MAX_HTTP_CLIENT; i++) {
-		s = &(http_req[i].clisock);
-		if(FD_ISSET(*s, &readable)) {
+		//s = &(http_req[i].clisock);
+		if(FD_ISSET(http_req[i].clisock, &readable)) {
 			/* Deal the request from the client socket. */
 			_HTTPServerRequest(&(http_req[i]), callback);
-			if(*s >= srv->_max_sock)
+			if(http_req[i].clisock >= srv->_max_sock)
 				srv->_max_sock -= 1;
-			FD_SET(*s, &(srv->_write_sock_pool));
-			FD_CLR(*s, &(srv->_read_sock_pool));
+			FD_SET(http_req[i].clisock, &(srv->_write_sock_pool));
+			FD_CLR(http_req[i].clisock, &(srv->_read_sock_pool));
 		}
-		if(IsReqWriteEnd(http_req[i].work_state) && FD_ISSET(*s, &writeable)) {
+		if(IsReqWriteEnd(http_req[i].work_state) && FD_ISSET(http_req[i].clisock, &writeable)) {
 		}
-		if(IsReqClose(http_req[i].work_state) && (*s != -1)) {
-			shutdown(*s, SHUT_RDWR);
-			close(*s);
-			FD_CLR(*s, &(srv->_write_sock_pool));
-			*s = -1;
+		if(IsReqClose(http_req[i].work_state) && (http_req[i].clisock != -1)) {
+			shutdown(http_req[i].clisock, SHUT_RDWR);
+			close(http_req[i].clisock);
+			FD_CLR(http_req[i].clisock, &(srv->_write_sock_pool));
+			http_req[i].clisock = -1;
 			http_req[i].work_state = NOTWORK_SOCKET;
 		}
 	}
