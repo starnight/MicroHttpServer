@@ -186,7 +186,7 @@ int _ParseHeader(SOCKET clisock, HTTPReqMessage *req) {
 		n = recv(clisock, p + i, 8, 0);
 		for(i+=8; (n>0) && (i<MAX_HEADER_SIZE); i++) {
 			n = recv(clisock, p + i, 1, 0);
-			if(l = _CheckLine(p + i)) {
+			if((l = _CheckLine(p + i))) {
 				if(l == 2) p[i - 1] = '\0';
 				p[i] = '\0';
 				break;
@@ -200,13 +200,13 @@ int _ParseHeader(SOCKET clisock, HTTPReqMessage *req) {
 		for(; (n>0) && (i<MAX_HEADER_SIZE) && (req->Header.Amount<MAX_HEADER_FIELDS); i++) {
 			n = recv(clisock, p + i, 1, 0);
 			/* Check field key name end. */
-			if(l = _CheckFieldSep(p + i)) {
+			if((l = _CheckFieldSep(p + i))) {
 				p[i - 1] = '\0';
 				req->Header.Fields[req->Header.Amount].value = p + i + 1;
 			}
 
 			/* Check header end. */
-			if(l = _CheckLine(p + i)) {
+			if((l = _CheckLine(p + i))) {
 				if(end == 0) {
 					if(l == 2) p[i - 1] = '\0';
 					p[i] = '\0';
