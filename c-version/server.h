@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define MAX_HEADER_SIZE  516
+#define MAX_HEADER_SIZE  512
 #define MAX_BODY_SIZE    1024
 #ifndef MTS_PORT
 #define MTS_PORT         8001
