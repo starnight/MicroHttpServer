@@ -6,9 +6,41 @@
 #include "server.h"
 #include <errno.h>
 
+typedef void (*SOCKET_CALLBACK)(void *);
+
+#define NOTWORK_SOCKET      0
+#define READING_SOCKET      1
+#define READEND_SOCKET      2
+#define WRITING_SOCKET      4
+#define WRITEEND_SOCKET     8
+#define CLOSE_SOCKET        128
+#define IsReqReading(s)     (s & READING_SOCKET)
+#define IsReqWriting(s)     (s & WRITING_SOCKET)
+#define IsReqReadEnd(s)     (s & READEND_SOCKET)
+#define IsReqWriteEnd(s)    (s & WRITEEND_SOCKET)
+#define IsReqClose(s)       (s & CLOSE_SOCKET)
+
+typedef struct _HTTPReq {
+	SOCKET clisock;
+	HTTPReqMessage req;
+	HTTPResMessage res;
+	SOCKET_CALLBACK OnRead;
+	SOCKET_CALLBACK EndRead;
+	SOCKET_CALLBACK OnWrite;
+	SOCKET_CALLBACK EndWrite;
+	unsigned int rindex;
+	unsigned int windex;
+	uint8_t work_state;
+} HTTPReq;
+
+HTTPReq http_req[MAX_HTTP_CLIENT];
+uint8_t req_buf[MAX_HTTP_CLIENT][MAX_HEADER_SIZE + MAX_BODY_SIZE];
+uint8_t res_buf[MAX_HTTP_CLIENT][MAX_HEADER_SIZE + MAX_BODY_SIZE];
+
 void HTTPServerInit(HTTPServer *srv, uint16_t port) {
 	struct sockaddr_in srv_addr;
 	int flags;
+	unsigned int i;
 
 	/* Have a server socket. */
 	srv->sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -38,6 +70,14 @@ void HTTPServerInit(HTTPServer *srv, uint16_t port) {
 	FD_SET(srv->sock, &(srv->_read_sock_pool));
 	/* The server socket's FD is max in the master socket queue for now. */
 	srv->_max_sock = srv->sock;
+
+	/* Prepare the HTTP client requests pool. */
+	for(i=0; i<MAX_HTTP_CLIENT; i++) {
+		http_req[i].req._buf = req_buf[i];
+		http_req[i].res._buf = res_buf[i];
+		http_req[i].clisock = -1;
+		http_req[i].work_state = NOTWORK_SOCKET;
+	}
 }
 
 void _HTTPServerAccept(HTTPServer *srv) {
@@ -45,6 +85,7 @@ void _HTTPServerAccept(HTTPServer *srv) {
 	int sockaddr_len = sizeof(cli_addr);
 	SOCKET clisock;
 	int flags;
+	unsigned int i;
 
 	/* Have the client socket and append it to the master socket queue. */
 	clisock = accept(srv->sock, (struct sockaddr*) &cli_addr, &sockaddr_len);
@@ -58,6 +99,15 @@ void _HTTPServerAccept(HTTPServer *srv) {
 		DebugMsg("Accept 1 client. %s:%d\n",
 					inet_ntoa(cli_addr.sin_addr),
 					(int)ntohs(cli_addr.sin_port));
+		/* Add into HTTP client requests pool. */
+		for(i=0; i<MAX_HTTP_CLIENT; i++) {
+			if(http_req[i].clisock == -1) {
+				http_req[i].clisock = clisock;
+				http_req[i].req.Header.Amount = 0;
+				http_req[i].res.Header.Amount = 0;
+				break;
+			}
+		}
 	}
 }
 
@@ -215,32 +265,32 @@ int _GetBody(SOCKET clisock, HTTPReqMessage *req) {
 	return i;
 }
 
-void _HTTPServerRequest(SOCKET clisock, HTTPREQ_CALLBACK callback) {
-	uint8_t req_buf[MAX_HEADER_SIZE + MAX_BODY_SIZE];
-	uint8_t res_buf[MAX_HEADER_SIZE + MAX_BODY_SIZE];
+void _HTTPServerRequest(HTTPReq *hr, HTTPREQ_CALLBACK callback) {
 	int n, i;
-	HTTPReqMessage request;
-	HTTPResMessage response;
 
-	request._buf = req_buf;
-	request.Header.Amount = 0;
-	response._buf = res_buf;
-	response.Header.Amount = 0;
-	n = _ParseHeader(clisock, &request);
+	hr->work_state = READING_SOCKET;
+	n = _ParseHeader(hr->clisock, &(hr->req));
 	if(n > 0) {
-		n = _GetBody(clisock, &request);
-		callback(&request, &response);
+		n = _GetBody(hr->clisock, &(hr->req));
+		callback(&(hr->req), &(hr->res));
 		/* Write all response. */
+		hr->work_state = WRITING_SOCKET;
 		i = 0;
-		do {
-			n = write(clisock, res_buf, response._index - i);
-			i += n;
-		} while((n > 0) && (i < response._index));
+		while(i < hr->res._index) {
+			n = write(hr->clisock, hr->res._buf + i, hr->res._index - i);
+			if(n > 0)
+				i += n;
+			else
+				break;
+		}
+		hr->work_state = WRITEEND_SOCKET;
 	}
+	hr->work_state = CLOSE_SOCKET;
 }
 
 void HTTPServerRun(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 	fd_set readable, writeable;
+	SOCKET *s;
 	uint16_t i;
 
 	/* Copy master socket queue to readable, writeable socket queue. */
@@ -248,26 +298,31 @@ void HTTPServerRun(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 	writeable = srv->_write_sock_pool;
 	/* Wait the flag of any socket in readable socket queue. */
 	select(srv->_max_sock+1, &readable, &writeable, NULL, 0);
-	/* Go through the sockets in readable socket queue.  */
-	for(i=0; i<=srv->_max_sock; i++) {
-		if(FD_ISSET(i, &readable)) {
-			if(i == srv->sock) {
-				/* Accept when server socket has been connected. */
-				_HTTPServerAccept(srv);
-			}
-			else {
-				/* Deal the request from the client socket. */
-				_HTTPServerRequest(i, callback);
-				if(i >= srv->_max_sock) srv->_max_sock -= 1;
-				FD_SET(i, &(srv->_write_sock_pool));
-				FD_CLR(i, &(srv->_read_sock_pool));
-			}
+	/* Check sockets in HTTP client requests pool are readable. */
+	for(i=0; i<MAX_HTTP_CLIENT; i++) {
+		s = &(http_req[i].clisock);
+		if(FD_ISSET(*s, &readable)) {
+			/* Deal the request from the client socket. */
+			_HTTPServerRequest(&(http_req[i]), callback);
+			if(*s >= srv->_max_sock)
+				srv->_max_sock -= 1;
+			FD_SET(*s, &(srv->_write_sock_pool));
+			FD_CLR(*s, &(srv->_read_sock_pool));
 		}
-		if(FD_ISSET(i, &writeable)) {
-			shutdown(i, SHUT_RDWR);
-			close(i);
-			FD_CLR(i, &(srv->_write_sock_pool));
+		if(IsReqWriteEnd(http_req[i].work_state) && FD_ISSET(*s, &writeable)) {
 		}
+		if(IsReqClose(http_req[i].work_state) && (*s != -1)) {
+			shutdown(*s, SHUT_RDWR);
+			close(*s);
+			FD_CLR(*s, &(srv->_write_sock_pool));
+			*s = -1;
+			http_req[i].work_state = NOTWORK_SOCKET;
+		}
+	}
+	/* Check server socket is readable. */
+	if(FD_ISSET(srv->sock, &readable)) {
+		/* Accept when server socket has been connected. */
+		_HTTPServerAccept(srv);
 	}
 }
 
