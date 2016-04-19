@@ -12,11 +12,11 @@ typedef void (*SOCKET_CALLBACK)(void *);
 #define WRITING_SOCKET      4
 #define WRITEEND_SOCKET     8
 #define CLOSE_SOCKET        128
-#define IsReqReading(s)     (s & READING_SOCKET)
-#define IsReqWriting(s)     (s & WRITING_SOCKET)
-#define IsReqReadEnd(s)     (s & READEND_SOCKET)
-#define IsReqWriteEnd(s)    (s & WRITEEND_SOCKET)
-#define IsReqClose(s)       (s & CLOSE_SOCKET)
+#define IsReqReading(s)     (s == READING_SOCKET)
+#define IsReqWriting(s)     (s == WRITING_SOCKET)
+#define IsReqReadEnd(s)     (s == READEND_SOCKET)
+#define IsReqWriteEnd(s)    (s == WRITEEND_SOCKET)
+#define IsReqClose(s)       (s == CLOSE_SOCKET)
 
 typedef struct _HTTPReq {
 	SOCKET clisock;
@@ -305,7 +305,8 @@ void HTTPServerRun(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 			FD_SET(http_req[i].clisock, &(srv->_write_sock_pool));
 			FD_CLR(http_req[i].clisock, &(srv->_read_sock_pool));
 		}
-		if(IsReqWriteEnd(http_req[i].work_state) && FD_ISSET(http_req[i].clisock, &writeable)) {
+		if(IsReqWriteEnd(http_req[i].work_state)
+			&& FD_ISSET(http_req[i].clisock, &writeable)) {
 		}
 		if(IsReqClose(http_req[i].work_state) && (http_req[i].clisock != -1)) {
 			shutdown(http_req[i].clisock, SHUT_RDWR);
