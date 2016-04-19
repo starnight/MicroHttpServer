@@ -7,10 +7,10 @@
 typedef void (*SOCKET_CALLBACK)(void *);
 
 #define NOTWORK_SOCKET      0
-#define READING_SOCKET      1
-#define READEND_SOCKET      2
-#define WRITING_SOCKET      4
-#define WRITEEND_SOCKET     8
+#define READING_SOCKET      11
+#define READEND_SOCKET      12
+#define WRITING_SOCKET      14
+#define WRITEEND_SOCKET     18
 #define CLOSE_SOCKET        128
 #define IsReqReading(s)     (s == READING_SOCKET)
 #define IsReqWriting(s)     (s == WRITING_SOCKET)
