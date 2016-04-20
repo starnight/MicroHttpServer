@@ -302,6 +302,7 @@ void HTTPServerRun(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 	printf("Check there is a client connected.\n");
 	if(FD_ISSET(srv->sock, &readable)) {
 		/* Accept when server socket has been connected. */
+		printf("Accepted 1 client connected.\n");
 		_HTTPServerAccept(srv);
 	}
 	printf("Emurate each client socket.\n");
@@ -311,14 +312,17 @@ void HTTPServerRun(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 		//s = &(http_req[i].clisock);
 		if(FD_ISSET(http_req[i].clisock, &readable)) {
 			/* Deal the request from the client socket. */
+			printf("Deal %d socket's which whose FD is %d.\n");
 			_HTTPServerRequest(&(http_req[i]), callback);
 			FD_SET(http_req[i].clisock, &(srv->_write_sock_pool));
 			FD_CLR(http_req[i].clisock, &(srv->_read_sock_pool));
 		}
 		if(IsReqWriteEnd(http_req[i].work_state)
 			&& FD_ISSET(http_req[i].clisock, &writeable)) {
+			printf("Write %d socket's which whose FD is %d.\n");
 		}
 		if(IsReqClose(http_req[i].work_state) && (http_req[i].clisock != -1)) {
+			printf("Close %d socket's which whose FD is %d.\n");
 			shutdown(http_req[i].clisock, SHUT_RDWR);
 			close(http_req[i].clisock);
 			FD_CLR(http_req[i].clisock, &(srv->_write_sock_pool));
