@@ -309,27 +309,29 @@ void HTTPServerRun(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 	/* Check sockets in HTTP client requests pool are readable. */
 	for(i=0; i<MAX_HTTP_CLIENT; i++) {
 		printf("Emurate %d socket's FD is %d.\n", i, http_req[i].clisock);
-		//s = &(http_req[i].clisock);
-		if(FD_ISSET(http_req[i].clisock, &readable)) {
-			/* Deal the request from the client socket. */
-			printf("Deal %d socket's which whose FD is %d.\n");
-			_HTTPServerRequest(&(http_req[i]), callback);
-			FD_SET(http_req[i].clisock, &(srv->_write_sock_pool));
-			FD_CLR(http_req[i].clisock, &(srv->_read_sock_pool));
-		}
-		if(IsReqWriteEnd(http_req[i].work_state)
-			&& FD_ISSET(http_req[i].clisock, &writeable)) {
-			printf("Write %d socket's which whose FD is %d.\n");
-		}
-		if(IsReqClose(http_req[i].work_state) && (http_req[i].clisock != -1)) {
-			printf("Close %d socket's which whose FD is %d.\n");
-			shutdown(http_req[i].clisock, SHUT_RDWR);
-			close(http_req[i].clisock);
-			FD_CLR(http_req[i].clisock, &(srv->_write_sock_pool));
-			if(http_req[i].clisock >= srv->_max_sock)
-				srv->_max_sock -= 1;
-			http_req[i].clisock = -1;
-			http_req[i].work_state = NOTWORK_SOCKET;
+		if(http_req[i].clisock != -1) {
+			//s = &(http_req[i].clisock);
+			if(FD_ISSET(http_req[i].clisock, &readable)) {
+				/* Deal the request from the client socket. */
+				printf("Deal %d socket's which whose FD is %d.\n", i, http_req[i].clisock);
+				_HTTPServerRequest(&(http_req[i]), callback);
+				FD_SET(http_req[i].clisock, &(srv->_write_sock_pool));
+				FD_CLR(http_req[i].clisock, &(srv->_read_sock_pool));
+			}
+			if(IsReqWriteEnd(http_req[i].work_state)
+				&& FD_ISSET(http_req[i].clisock, &writeable)) {
+				printf("Write %d socket's which whose FD is %d.\n", i, http_req[i].clisock);
+			}
+			if(IsReqClose(http_req[i].work_state)) {
+				printf("Close %d socket's which whose FD is %d.\n", i, http_req[i].clisock);
+				shutdown(http_req[i].clisock, SHUT_RDWR);
+				close(http_req[i].clisock);
+				FD_CLR(http_req[i].clisock, &(srv->_write_sock_pool));
+				if(http_req[i].clisock >= srv->_max_sock)
+					srv->_max_sock -= 1;
+				http_req[i].clisock = -1;
+				http_req[i].work_state = NOTWORK_SOCKET;
+			}
 		}
 	}
 }
