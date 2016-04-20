@@ -37,7 +37,6 @@ static uint8_t res_buf[MAX_HTTP_CLIENT][MAX_HEADER_SIZE + MAX_BODY_SIZE];
 
 void HTTPServerInit(HTTPServer *srv, uint16_t port) {
 	struct sockaddr_in srv_addr;
-	int flags;
 	unsigned int i;
 
 	/* Have a server socket. */
@@ -55,8 +54,6 @@ void HTTPServerInit(HTTPServer *srv, uint16_t port) {
 		exit(1);
 	}
 	/* Set the server socket non-blocking. */
-	//flags = fcntl(srv->sock, F_GETFL, 0) | O_NONBLOCK;
-	//fcntl(srv->sock, F_SETFL, flags);
 	fcntl(srv->sock, F_SETFL, O_NONBLOCK);
 
 	/* Start server socket listening. */
@@ -83,7 +80,6 @@ void _HTTPServerAccept(HTTPServer *srv) {
 	struct sockaddr_in cli_addr;
 	socklen_t sockaddr_len = sizeof(cli_addr);
 	SOCKET clisock;
-	//int flags;
 	unsigned int i;
 
 	/* Have the client socket and append it to the master socket queue. */
@@ -91,8 +87,7 @@ void _HTTPServerAccept(HTTPServer *srv) {
 	if(clisock != -1) {
 		FD_SET(clisock, &(srv->_read_sock_pool));
 		/* Set the client socket non-blocking. */
-		//flags = fcntl(clisock, F_GETFL, 0) | O_NONBLOCK;
-		//fcntl(clisock, F_SETFL, flags);
+		//fcntl(clisock, F_SETFL, O_NONBLOCK);
 		/* Set the max socket file descriptor. */
 		if(clisock > srv->_max_sock) srv->_max_sock = clisock;
 		DebugMsg("Accept 1 client.\n");
@@ -292,38 +287,29 @@ void HTTPServerRun(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 	uint16_t i;
 
 	/* Copy master socket queue to readable, writeable socket queue. */
-	printf("Copy socket pool.\n");
 	readable = srv->_read_sock_pool;
 	writeable = srv->_write_sock_pool;
 	/* Wait the flag of any socket in readable socket queue. */
-	printf("Select socket in socket pool.\n");
 	select(srv->_max_sock+1, &readable, &writeable, NULL, &timeout);
 	/* Check server socket is readable. */
-	printf("Check there is a client connected.\n");
 	if(FD_ISSET(srv->sock, &readable)) {
 		/* Accept when server socket has been connected. */
-		printf("Accepted 1 client connected.\n");
 		_HTTPServerAccept(srv);
 	}
-	printf("Emurate each client socket.\n");
 	/* Check sockets in HTTP client requests pool are readable. */
 	for(i=0; i<MAX_HTTP_CLIENT; i++) {
-		printf("Emurate %d socket's FD is %d.\n", i, http_req[i].clisock);
 		if(http_req[i].clisock != -1) {
 			//s = &(http_req[i].clisock);
 			if(FD_ISSET(http_req[i].clisock, &readable)) {
 				/* Deal the request from the client socket. */
-				printf("Deal %d socket's which whose FD is %d.\n", i, http_req[i].clisock);
 				_HTTPServerRequest(&(http_req[i]), callback);
 				FD_SET(http_req[i].clisock, &(srv->_write_sock_pool));
 				FD_CLR(http_req[i].clisock, &(srv->_read_sock_pool));
 			}
 			if(IsReqWriteEnd(http_req[i].work_state)
 				&& FD_ISSET(http_req[i].clisock, &writeable)) {
-				printf("Write %d socket's which whose FD is %d.\n", i, http_req[i].clisock);
 			}
 			if(IsReqClose(http_req[i].work_state)) {
-				printf("Close %d socket's which whose FD is %d.\n", i, http_req[i].clisock);
 				shutdown(http_req[i].clisock, SHUT_RDWR);
 				close(http_req[i].clisock);
 				FD_CLR(http_req[i].clisock, &(srv->_write_sock_pool));
