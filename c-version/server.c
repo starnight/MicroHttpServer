@@ -55,8 +55,9 @@ void HTTPServerInit(HTTPServer *srv, uint16_t port) {
 		exit(1);
 	}
 	/* Set the server socket non-blocking. */
-	flags = fcntl(srv->sock, F_GETFL, 0) | O_NONBLOCK;
-	fcntl(srv->sock, F_SETFL, flags);
+	//flags = fcntl(srv->sock, F_GETFL, 0) | O_NONBLOCK;
+	//fcntl(srv->sock, F_SETFL, flags);
+	fcntl(srv->sock, F_SETFL, O_NONBLOCK);
 
 	/* Start server socket listening. */
 	DebugMsg("Listening\n");
@@ -286,16 +287,27 @@ void _HTTPServerRequest(HTTPReq *hr, HTTPREQ_CALLBACK callback) {
 
 void HTTPServerRun(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 	fd_set readable, writeable;
+	struct timeval timeout = {0, 0};
 	//SOCKET *s;
 	uint16_t i;
 
 	/* Copy master socket queue to readable, writeable socket queue. */
+	printf("Copy socket pool.\n");
 	readable = srv->_read_sock_pool;
 	writeable = srv->_write_sock_pool;
 	/* Wait the flag of any socket in readable socket queue. */
-	select(srv->_max_sock+1, &readable, &writeable, NULL, 0);
+	printf("Select socket in socket pool.\n");
+	select(srv->_max_sock+1, &readable, &writeable, NULL, &timeout);
+	/* Check server socket is readable. */
+	printf("Check there is a client connected.\n");
+	if(FD_ISSET(srv->sock, &readable)) {
+		/* Accept when server socket has been connected. */
+		_HTTPServerAccept(srv);
+	}
+	printf("Emurate each client socket.\n");
 	/* Check sockets in HTTP client requests pool are readable. */
 	for(i=0; i<MAX_HTTP_CLIENT; i++) {
+		printf("Emurate %d socket's FD is %d.\n", i, http_req[i].clisock);
 		//s = &(http_req[i].clisock);
 		if(FD_ISSET(http_req[i].clisock, &readable)) {
 			/* Deal the request from the client socket. */
@@ -315,11 +327,6 @@ void HTTPServerRun(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 			http_req[i].clisock = -1;
 			http_req[i].work_state = NOTWORK_SOCKET;
 		}
-	}
-	/* Check server socket is readable. */
-	if(FD_ISSET(srv->sock, &readable)) {
-		/* Accept when server socket has been connected. */
-		_HTTPServerAccept(srv);
 	}
 }
 
