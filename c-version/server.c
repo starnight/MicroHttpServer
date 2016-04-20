@@ -1,5 +1,6 @@
 #include <string.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <fcntl.h>
 #include "server.h"
@@ -90,7 +91,9 @@ void _HTTPServerAccept(HTTPServer *srv) {
 		//fcntl(clisock, F_SETFL, O_NONBLOCK);
 		/* Set the max socket file descriptor. */
 		if(clisock > srv->_max_sock) srv->_max_sock = clisock;
-		DebugMsg("Accept 1 client.\n");
+		DebugMsg("Accept 1 client.  %s:%d\n",
+					inet_ntoa(cli_addr.sin_addr),
+					(int)ntohs(cli_addr.sin_port));
 		/* Add into HTTP client requests pool. */
 		for(i=0; i<MAX_HTTP_CLIENT; i++) {
 			if(http_req[i].clisock == -1) {
@@ -283,7 +286,6 @@ void _HTTPServerRequest(HTTPReq *hr, HTTPREQ_CALLBACK callback) {
 void HTTPServerRun(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 	fd_set readable, writeable;
 	struct timeval timeout = {0, 0};
-	//SOCKET *s;
 	uint16_t i;
 
 	/* Copy master socket queue to readable, writeable socket queue. */
