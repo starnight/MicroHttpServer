@@ -300,8 +300,6 @@ void HTTPServerRun(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 		if(FD_ISSET(http_req[i].clisock, &readable)) {
 			/* Deal the request from the client socket. */
 			_HTTPServerRequest(&(http_req[i]), callback);
-			if(http_req[i].clisock >= srv->_max_sock)
-				srv->_max_sock -= 1;
 			FD_SET(http_req[i].clisock, &(srv->_write_sock_pool));
 			FD_CLR(http_req[i].clisock, &(srv->_read_sock_pool));
 		}
@@ -312,6 +310,8 @@ void HTTPServerRun(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 			shutdown(http_req[i].clisock, SHUT_RDWR);
 			close(http_req[i].clisock);
 			FD_CLR(http_req[i].clisock, &(srv->_write_sock_pool));
+			if(http_req[i].clisock >= srv->_max_sock)
+				srv->_max_sock -= 1;
 			http_req[i].clisock = -1;
 			http_req[i].work_state = NOTWORK_SOCKET;
 		}
