@@ -159,7 +159,10 @@ void WriteSock(HTTPReq *hr) {
 	if(n > 0) {
 		/* Send some bytes and send left next loop. */
 		hr->windex += n;
-		hr->work_state = WRITING_SOCKET;
+		if(hr->res._index > hr->windex)
+			hr->work_state = WRITING_SOCKET;
+		else
+			hr->work_state = WRITEEND_SOCKET;
 	}
 	else if(n == 0) {
 		/* Writing is finished. */
