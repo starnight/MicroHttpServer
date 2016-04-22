@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <fcntl.h>
+#include <errno.h>
 #include "server.h"
 
 typedef void (*SOCKET_CALLBACK)(void *);
@@ -100,6 +101,8 @@ void _HTTPServerAccept(HTTPServer *srv) {
 				http_req[i].clisock = clisock;
 				http_req[i].req.Header.Amount = 0;
 				http_req[i].res.Header.Amount = 0;
+				http_req[i].rindex = 0;
+				http_req[i].windex = 0;
 				break;
 			}
 		}
@@ -146,7 +149,36 @@ HTTPMethod HaveMethod(char *method) {
 	return m;
 }
 
-int _ParseHeader(SOCKET clisock, HTTPReqMessage *req) {
+void WriteSock(HTTPReq *hr) {
+	ssize_t n;
+
+	n = send(hr->clisock,
+				hr->res._buf + hr->windex,
+				hr->res._index - hr->windex,
+				MSG_DONTWAIT);
+	if(n > 0) {
+		/* Send some bytes and send left next loop. */
+		hr->windex += n;
+		hr->work_state = WRITING_SOCKET;
+	}
+	else if(n == 0) {
+		/* Writing is finished. */
+		hr->work_state = WRITEEND_SOCKET;
+	}
+	else if((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+		/* Send with non-blocking socket. */
+		hr->windex += hr->res._index - hr->windex;
+		hr->work_state = WRITING_SOCKET;
+	}
+	else {
+		/* Send with error. */
+		hr->work_state = CLOSE_SOCKET;
+	}
+}
+
+int _ParseHeader(HTTPReq *hr) {
+	SOCKET clisock = hr->clisock;
+	HTTPReqMessage *req = &(hr->req);
 	int n;
 	int l, end;
 	int i = 0;
@@ -227,12 +259,17 @@ int _ParseHeader(SOCKET clisock, HTTPReqMessage *req) {
 			}
 		}
 	}
+	if(n < 0) {
+		hr->work_state = CLOSE_SOCKET;
+	}
 
 	req->_index = (n > 0) ? i + 1: i;
 	return i;
 }
 
-int _GetBody(SOCKET clisock, HTTPReqMessage *req) {
+int _GetBody(HTTPReq *hr) {
+	SOCKET clisock = hr->clisock;
+	HTTPReqMessage *req = &(hr->req);
 	int n = 1;
 	int i = 0;
 	unsigned int len = 0;
@@ -257,30 +294,28 @@ int _GetBody(SOCKET clisock, HTTPReqMessage *req) {
 
 	req->Body[i] = '\0';
 
-	return i;
+	return (n < 0) ? -1 : i;
 }
 
 void _HTTPServerRequest(HTTPReq *hr, HTTPREQ_CALLBACK callback) {
-	int n, i;
+	int n;
 
 	hr->work_state = READING_SOCKET;
-	n = _ParseHeader(hr->clisock, &(hr->req));
+	n = _ParseHeader(hr);
 	if(n > 0) {
-		n = _GetBody(hr->clisock, &(hr->req));
-		callback(&(hr->req), &(hr->res));
-		/* Write all response. */
-		hr->work_state = WRITING_SOCKET;
-		i = 0;
-		while(i < hr->res._index) {
-			n = write(hr->clisock, hr->res._buf + i, hr->res._index - i);
-			if(n > 0)
-				i += n;
-			else
-				break;
+		n = _GetBody(hr);
+		if(n >= 0) {
+			callback(&(hr->req), &(hr->res));
+			/* Write all response. */
+			hr->work_state = WRITING_SOCKET;
 		}
-		hr->work_state = WRITEEND_SOCKET;
+		else {
+			hr->work_state = CLOSE_SOCKET;
+		}
 	}
-	hr->work_state = CLOSE_SOCKET;
+	else {
+		hr->work_state = CLOSE_SOCKET;
+	}
 }
 
 void HTTPServerRun(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
@@ -308,8 +343,12 @@ void HTTPServerRun(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 				FD_SET(http_req[i].clisock, &(srv->_write_sock_pool));
 				FD_CLR(http_req[i].clisock, &(srv->_read_sock_pool));
 			}
-			if(IsReqWriteEnd(http_req[i].work_state)
+			if(IsReqWriting(http_req[i].work_state)
 				&& FD_ISSET(http_req[i].clisock, &writeable)) {
+				WriteSock(http_req + i);
+			}
+			if(IsReqWriteEnd(http_req[i].work_state)) {
+				http_req[i].work_state = CLOSE_SOCKET;
 			}
 			if(IsReqClose(http_req[i].work_state)) {
 				shutdown(http_req[i].clisock, SHUT_RDWR);
