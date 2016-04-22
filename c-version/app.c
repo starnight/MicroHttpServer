@@ -85,7 +85,7 @@ void HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
 char *itoa(int n, char *s, int b) {
 	char digits[] = "0123456789ABCDEF";
 	uint8_t i = 0;
-	int shift = n;
+	int shift;
 	char *p;
 
 	p = s;
@@ -98,6 +98,7 @@ char *itoa(int n, char *s, int b) {
 	}
 
 	/* Convert integer to characters. */
+	shift = n;
 	if(shift == 0)
 		i = 1;
 	else
