@@ -66,4 +66,4 @@ Open your web browser and access the URL: http://localhost:8001
 
 ## License
 
-Micro HTTP Server's code uses the BSD license, see our 'LICENSE.md' file.
+Micro HTTP Server's code uses the BSD license, see our **LICENSE.md** file.
