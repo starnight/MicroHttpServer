@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from server import HTTPServer
-from middleware import Routes
+from lib.server import HTTPServer
+from lib.middleware import Routes
 import app
 
 if __name__ == "__main__":
