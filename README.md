@@ -34,26 +34,26 @@ Open your web browser and access the URL: http://localhost:8001
 ## Directories and Files
 
 * autotest/: Place the scripts or programs for test automation.
-** client.py: The test automation program writen in Python3 tests the Micro HTTP Server.
+  * client.py: The test automation program writen in Python3 tests the Micro HTTP Server.
 * py-version/: Place the Python Version Micro HTTP Server.
-** main.py: The entry point of Python Version Micro HTTP Server example.
-** app.py: The web application of Python Version Micro HTTP Server example.
-** lib/: Place the Python Version Micro HTTP Server core library.
-*** server.py: The Python Version Micro HTTP Server.
-*** middleware.py: The Python Version Micro HTTP Server middleware.
-*** __init__.py: Needed when server.py and middleware.py are imported by other Python programs located in other directories.
-** static/: Place the static files, which could be access directly, of Python Version Micro HTTP Server example.
+  * main.py: The entry point of Python Version Micro HTTP Server example.
+  * app.py: The web application of Python Version Micro HTTP Server example.
+  * lib/: Place the Python Version Micro HTTP Server core library.
+    * server.py: The Python Version Micro HTTP Server.
+    * middleware.py: The Python Version Micro HTTP Server middleware.
+    * \_\_init\_\_.py: Needed when server.py and middleware.py are imported by other Python programs located in other directories.
+  * static/: Place the static files, which could be access directly, of Python Version Micro HTTP Server example.
 * c-version/: Place the C Version Micro HTTP Server.
-** main.c: The entry point of C Version Micro HTTP Server example.
-** app.h: The web application header file of C Version Micro HTTP Server example.
-** app.c: The web application source file of C Version Micro HTTP Server example.
-** lib/: Place the C Version Micro HTTP Server core library.
-*** server.h: The header file of C Version Micro HTTP Server.
-*** server.c: The source file of C Version Micro HTTP Server.
-*** middleware.h: The header file of C Version Micro HTTP Server middleware.
-*** middleware.c: The source file of C Version Micro HTTP Server middleware.
-** static/: Place the static files, which could be access directly, of C Version Micro HTTP Server example.
-** Makefile: The makefile of this C Version Micro HTTP Server example.
+  * main.c: The entry point of C Version Micro HTTP Server example.
+  * app.h: The web application header file of C Version Micro HTTP Server example.
+  * app.c: The web application source file of C Version Micro HTTP Server example.
+  * lib/: Place the C Version Micro HTTP Server core library.
+    * server.h: The header file of C Version Micro HTTP Server.
+    * server.c: The source file of C Version Micro HTTP Server.
+    * middleware.h: The header file of C Version Micro HTTP Server middleware.
+    * middleware.c: The source file of C Version Micro HTTP Server middleware.
+  * static/: Place the static files, which could be access directly, of C Version Micro HTTP Server example.
+  * Makefile: The makefile of this C Version Micro HTTP Server example.
 * .travis.yml: The continuous integration build script for Travis CI.
 * LICENSE.md: The BSD license file.
 * README.md: This read me file.
