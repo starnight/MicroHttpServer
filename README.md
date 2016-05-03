@@ -42,7 +42,7 @@ Open your web browser and access the URL: http://localhost:8001
     * server.py: The Python Version Micro HTTP Server.
     * middleware.py: The Python Version Micro HTTP Server middleware.
     * \_\_init\_\_.py: Needed when server.py and middleware.py are imported by other Python programs located in other directories.
-  * static/: Place the static files, which could be access directly, of Python Version Micro HTTP Server example.
+  * static/: Place the static files: HTML, JS, Images ... , which could be access directly.
 * c-version/: Place the C Version Micro HTTP Server.
   * main.c: The entry point of C Version Micro HTTP Server example.
   * app.h: The web application header file of C Version Micro HTTP Server example.
@@ -52,7 +52,7 @@ Open your web browser and access the URL: http://localhost:8001
     * server.c: The source file of C Version Micro HTTP Server.
     * middleware.h: The header file of C Version Micro HTTP Server middleware.
     * middleware.c: The source file of C Version Micro HTTP Server middleware.
-  * static/: Place the static files, which could be access directly, of C Version Micro HTTP Server example.
+  * static/: Place the static files: HTML, JS, Images ... , which could be access directly.
   * Makefile: The makefile of this C Version Micro HTTP Server example.
 * .travis.yml: The continuous integration build script for Travis CI.
 * LICENSE.md: The BSD license file.
