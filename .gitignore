@@ -23,3 +23,6 @@ __pycache__/
 *.eep
 *.elf
 microhttpserver
+
+# config
+tags
