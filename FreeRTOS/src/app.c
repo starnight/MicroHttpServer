@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include "gpio.h"
 #include "app.h"
 
 void HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
@@ -163,6 +164,57 @@ void Fib(HTTPReqMessage *req, HTTPResMessage *res) {
 		memcpy(p, "Wrong", 6);
 		i += 6;
 	}
+
+	res->_index = i;
+}
+
+#define NUM_LEDS	4
+
+void LED(HTTPReqMessage *req, HTTPResMessage *res) {
+	char *p;
+	char header[] = "HTTP/1.1 200 OK\r\nConnection: close\r\n" \
+					"Content-Type: text/text; charset=UTF-8\r\n\r\n";
+	char *LED_str[NUM_LEDS] = {"GREEN=", "ORANGE=", "RED=", "BLUE="};
+	uint32_t LEDs[NUM_LEDS] = {GREEN, ORANGE, RED, BLUE};
+	char *str;
+	int n, i;
+	int8_t state, c;
+
+	/* Go through the LEDs. */
+	c = 0;
+	for(i=0; i<NUM_LEDS; i++) {
+		/* Find the LED strings. */
+		str = strstr((char *)req->Body, LED_str[i]);
+
+		if(str == NULL) {
+			/* Not found the corresponding LED color string. */
+			continue;
+		}
+
+		/* Found the corresponding LED color string. */
+		c += 1;
+		/* Get the config state. */
+		state = atoi(str + strlen(LED_str[i]));
+		/* Set the state of the corresponding LED. */
+		if(state == 1) {
+			GPIO_SetBits(LEDS_GPIO_PORT, LEDs[i]);
+		}
+		else if(state == 0) {
+			GPIO_ResetBits(LEDS_GPIO_PORT, LEDs[i]);
+		}
+	}
+
+	/* Build response. */
+	i = 0;
+	/* Build response header. */
+	p = (char *)res->_buf;
+	n = strlen(header);
+	memcpy(p, header, n);
+	p += n;
+	i += n;
+	/* Build response body. */
+	memcpy(p, "OK", 2);
+	i += 2;
 
 	res->_index = i;
 }

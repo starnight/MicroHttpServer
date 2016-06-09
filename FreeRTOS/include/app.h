@@ -5,5 +5,6 @@
 
 void HelloPage(HTTPReqMessage *, HTTPResMessage *);
 void Fib(HTTPReqMessage *, HTTPResMessage *);
+void LED(HTTPReqMessage *req, HTTPResMessage *res);
 
 #endif

@@ -10,6 +10,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+#include "gpio.h"
 #include "usart.h"
 #include "bits/mac_esp8266.h"
 #include "server.h"
@@ -32,6 +33,7 @@ void MicroHTTPServer_task() {
 	/* Start Micro HTTP server. */
 	AddRoute(HTTP_GET, "/", HelloPage);
 	AddRoute(HTTP_POST, "/fib", Fib);
+	AddRoute(HTTP_POST, "/led", LED);
 	USART_Printf(USART2, "Going to start Micro HTTP Server.\r\n");
 	HTTPServerInit(&srv, MTS_PORT);
 	USART_Printf(USART2, "Micro HTTP Server started and listening.\r\n");
@@ -55,7 +57,8 @@ int main(void) {
 
 #define MICROHTTPSERVER_STACK_SIZE	(8*1024)
 
-	//delay(10000000L);
+	/* Initial LEDs. */
+	setup_leds();
 
 	/* Initial console interface. */
 	setup_usart2();
