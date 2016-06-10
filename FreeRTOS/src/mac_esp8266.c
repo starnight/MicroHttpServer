@@ -209,7 +209,8 @@ void vESP8266RTask(void *__p) {
 			/* Parse finished and releas ESP8266 UART channel usage mutex. */
 			xSemaphoreGive(xUSART_Mutex);
 		}
-		/* Wait for ESP8266 UART channel usage mutex or new request from ESP8266 UART channel. */
+		/* Wait for ESP8266 UART channel usage mutex or new request from ESP8266
+		 * UART channel. */
 		vTaskDelay(100*portTICK_PERIOD_MS);
 	}
 }
@@ -340,7 +341,8 @@ int HaveInterfaceIP(uint32_t *pip) {
 		res[n + 1] = '\0';
 
 		if(strncmp(res, "+CIFSR:STAIP,", 13) == 0) {
-			sscanf(res, "+CIFSR:STAIP,\"%d.%d.%d.%d\"", &ip[0], &ip[1], &ip[2], &ip[3]);
+			sscanf(res, "+CIFSR:STAIP,\"%d.%d.%d.%d\"",
+				   &ip[0], &ip[1], &ip[2], &ip[3]);
 			*pip = ip[0] << 24 + ip[1] << 16 + ip[2] << 8 + ip[3];
 		}
 	}
@@ -356,7 +358,8 @@ int HaveInterfaceIP(uint32_t *pip) {
 	xSemaphoreGive(xUSART_Mutex);
 
 	if(strncmp(res, "\r\nOK\r\n", 6) == 0) {
-		snprintf(debug, 30, "\tGet ip %d.%d.%d.%d ok!\r\n", ip[0], ip[1], ip[2], ip[3]);
+		snprintf(debug, 30, "\tGet ip %d.%d.%d.%d ok!\r\n",
+				 ip[0], ip[1], ip[2], ip[3]);
 		USART_Printf(USART2, debug);
 		return 0;
 	}
@@ -530,7 +533,8 @@ void vSendSocketTask(void *__p) {
 		} while(n < l);
 		res[n] = '\0';
 
-		snprintf(send_header, 30, "AT+CIPSEND=%d,%d\r\r\n\r\nOK\r\n> ", id, len);
+		snprintf(send_header, 30, "AT+CIPSEND=%d,%d\r\r\n\r\nOK\r\n> ",
+				 id, len);
 		if(strncmp(res, send_header, strlen(send_header)) != 0) {
 			break;
 		}
@@ -574,7 +578,8 @@ ssize_t SendSocket(SOCKET s, void *buf, size_t len, int f) {
 		_SET_BIT(clisock[id].state, SOCKET_WRITING);
 
 		/* Make sure there is no pending message of ESP8266 RX data. */
-		while(USART_Readable(USART6) || (_ESP8266_Command != ESP8266_NONE_COMMAND)) {
+		while(USART_Readable(USART6)
+			  || (_ESP8266_Command != ESP8266_NONE_COMMAND)) {
 			vTaskDelay(100);
 		}
 
@@ -639,7 +644,8 @@ int ShutdownSocket(SOCKET s, int how) {
 
 	if(_ISBIT_SET(clisock[id].state, SOCKET_USING)) {
 		/* Make sure there is no pending message of ESP8266 RX data. */
-		while(USART_Readable(USART6) || (_ESP8266_Command != ESP8266_NONE_COMMAND)) {
+		while(USART_Readable(USART6)
+			  || (_ESP8266_Command != ESP8266_NONE_COMMAND)) {
 			vTaskDelay(1000);
 		}
 

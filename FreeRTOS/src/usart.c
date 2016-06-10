@@ -100,7 +100,8 @@ int PopQueue(RX_QUEUE *__q, void *__pe) {
 	}
 
 	if(f) {
-		/* Zero copy an element from buffer according the size of each element. */
+		/* Zero copy an element from buffer according the size of each
+		 * element. */
 		for(i=0; i<__q->eSize; i++)
 			b[i] = *(__q->buf + __q->eSize*__q->rIdx + i);
 		/* Increment rIdx. */
