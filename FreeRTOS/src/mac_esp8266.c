@@ -273,7 +273,7 @@ void InitESP8266(void) {
 						    "ESP8266 RX",
 							300,
 							NULL,
-							tskIDLE_PRIORITY,
+							tskIDLE_PRIORITY + 1,
 							&xHandle);
 	if(xReturned == pdPASS) {
 	}
@@ -286,7 +286,7 @@ void InitESP8266(void) {
 							"ESP8266 TX",
 							256,
 							NULL,
-							tskIDLE_PRIORITY,
+							tskIDLE_PRIORITY + 1,
 							&xCommandTask);
 	if(xReturned == pdPASS) {
 		vTaskSuspend(xCommandTask);

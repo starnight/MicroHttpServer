@@ -74,7 +74,7 @@ int main(void) {
 							"Micro HTTP Server",
 							MICROHTTPSERVER_STACK_SIZE,
 							NULL,
-							tskIDLE_PRIORITY,
+							tskIDLE_PRIORITY + 1,
 							NULL);
 	if(xReturned == pdPASS) {
 	}
