@@ -283,7 +283,7 @@ void InitESP8266(void) {
 	/* Create ESP8266 command task to USART TX. */
 	xReturned = xTaskCreate(vESP8266TTask,
 							"ESP8266 TX",
-							250,
+							256,
 							NULL,
 							tskIDLE_PRIORITY,
 							&xCommandTask);
@@ -538,7 +538,7 @@ void vSendSocketTask(void *__p) {
 		/* Send socket payload to ESP8266. */
 		USART_Send(USART6, clisock[id].sbuf, len, NON_BLOCKING);
 		/* Have ESP8266 response message. */
-		for(n=0; (n < 30); n++) {
+		for(n=0; (n < 32); n++) {
 			while(USART_Read(USART6, res+n, 1, BLOCKING) <= 0) {
 				vTaskDelay(100);
 			}
@@ -550,6 +550,9 @@ void vSendSocketTask(void *__p) {
 			}
 		}
 		res[n] = '\0';
+
+		if(sscanf(res, "\r\nRecv %d bytes\r\n\r\nSEND OK\r\n", &len) > 0) {
+		}
 
 		clisock[id].slen -= len;
 		clisock[id].sbuf += len;
