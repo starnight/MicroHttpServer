@@ -211,7 +211,7 @@ void vESP8266RTask(void *__p) {
 		}
 		/* Wait for ESP8266 UART channel usage mutex or new request from ESP8266
 		 * UART channel. */
-		vTaskDelay(100*portTICK_PERIOD_MS);
+		vTaskDelay(10*portTICK_PERIOD_MS);
 	}
 }
 
