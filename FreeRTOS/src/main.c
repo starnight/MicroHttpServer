@@ -35,7 +35,7 @@ void MicroHTTPServer_task() {
 	AddRoute(HTTP_POST, "/fib", Fib);
 	AddRoute(HTTP_POST, "/led", LED);
 	USART_Printf(USART2, "Going to start Micro HTTP Server.\r\n");
-	HTTPServerInit(&srv, MTS_PORT);
+	HTTPServerInit(&srv, MHS_PORT);
 	USART_Printf(USART2, "Micro HTTP Server started and listening.\r\n");
 	while(1) {
 		HTTPServerRun(&srv, Dispatch);

@@ -454,7 +454,7 @@ void _HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
 
 int main(void) {
 	HTTPServer srv;
-	HTTPServerInit(&srv, MTS_PORT);
+	HTTPServerInit(&srv, MHS_PORT);
 	while(1) { HTTPServerRun(&srv, _HelloPage); }
 	HTTPServerClose(&srv);
 	return 0;

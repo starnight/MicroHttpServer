@@ -19,7 +19,7 @@ int main(void) {
 	AddRoute(HTTP_GET, "/index.html", HelloPage);
 	AddRoute(HTTP_GET, "/", HelloPage);
 	AddRoute(HTTP_POST, "/fib", Fib);
-	HTTPServerInit(&srv, MTS_PORT);
+	HTTPServerInit(&srv, MHS_PORT);
 	HTTPServerRunLoop(&srv, Dispatch);
 	HTTPServerClose(&srv);
 	return 0;

@@ -7,8 +7,8 @@
 
 #define MAX_HEADER_SIZE  1024
 #define MAX_BODY_SIZE    1024
-#ifndef MTS_PORT
-#define MTS_PORT         80
+#ifndef MHS_PORT
+#define MHS_PORT         80
 #endif
 #ifndef MAX_HTTP_CLIENT
 #define MAX_HTTP_CLIENT  5
