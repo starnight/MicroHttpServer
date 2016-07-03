@@ -5,20 +5,15 @@
 void HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
 	int n, i = 0, j;
 	char *p;
-	char header1[] = "HTTP/1.1 200 OK\r\nConnection: close\r\n";
-	char header2[] = "Content-Type: text/html; charset=UTF-8\r\n\r\n";
+	char header[] = "HTTP/1.1 200 OK\r\nConnection: close\r\n"
+					"Content-Type: text/html; charset=UTF-8\r\n\r\n";
 	char body1[] = "<html><body>Hello!<br>許功蓋<br>";
 	char body2[] = "</body></html>";
 
 	/* Build header. */
 	p = (char *)res->_buf;
-	n = strlen(header1);
-	memcpy(p, header1, n);
-	p += n;
-	i += n;
-
-	n = strlen(header2);
-	memcpy(p, header2, n);
+	n = strlen(header);
+	memcpy(p, header, n);
 	p += n;
 	i += n;
 
@@ -135,20 +130,15 @@ int fibnacci(int l) {
 void Fib(HTTPReqMessage *req, HTTPResMessage *res) {
 	int n, i = 0;
 	char *p;
-	char header1[] = "HTTP/1.1 200 OK\r\nConnection: close\r\n";
-	char header2[] = "Content-Type: text/text; charset=UTF-8\r\n\r\n";
+	char header[] = "HTTP/1.1 200 OK\r\nConnection: close\r\n"
+					"Content-Type: text/text; charset=UTF-8\r\n\r\n";
 	int l;
 	char *str;
 
 	/* Build header. */
 	p = (char *)res->_buf;
-	n = strlen(header1);
-	memcpy(p, header1, n);
-	p += n;
-	i += n;
-
-	n = strlen(header2);
-	memcpy(p, header2, n);
+	n = strlen(header);
+	memcpy(p, header, n);
 	p += n;
 	i += n;
 
