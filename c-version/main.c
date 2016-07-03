@@ -16,10 +16,14 @@ void SigRoutine_INT(int unused) {
 #endif
 
 int main(void) {
+	/* Register the routes. */
 	AddRoute(HTTP_GET, "/index.html", HelloPage);
 	AddRoute(HTTP_GET, "/", HelloPage);
 	AddRoute(HTTP_POST, "/fib", Fib);
+	/* Initial the HTTP server and make it listening on MHS_PORT. */
 	HTTPServerInit(&srv, MHS_PORT);
+	/* Run the HTTP server forever. */
+	/* Run the dispatch callback if there is a new request */
 	HTTPServerRunLoop(&srv, Dispatch);
 	HTTPServerClose(&srv);
 	return 0;
