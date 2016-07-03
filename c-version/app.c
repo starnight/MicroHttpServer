@@ -1,3 +1,5 @@
+/* This file defines the server application functions (SAFs). */
+
 #include <string.h>
 #include <stdlib.h>
 #include "app.h"

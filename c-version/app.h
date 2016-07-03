@@ -1,3 +1,5 @@
+/* This file declares the server application functions (SAFs). */
+
 #ifndef __APP_H__
 #define __APP_H__
 

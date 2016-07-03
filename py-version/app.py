@@ -1,3 +1,5 @@
+# This file defines the server application functions (SAFs).
+
 from datetime import datetime
 
 def WellcomePage(req, res):
