@@ -7,15 +7,16 @@
 int select(SOCKET nfds, fd_set *__readfds, fd_set *__writefds,
 			fd_set *__exceptfds, struct timeval *__timeout) {
 	SOCKET i;
-	int c;
+	/* Count the ready socket. */
+	int count;
 
-	c = 0;
+	count = 0;
 	/* Go through interested sockets. */
 	for(i = SOCKET_BASE; i < nfds; i++) {
 		if((__readfds != NULL) && FD_ISSET(i, __readfds)) {
 			if(IsSocketReady2Read(i)) {
 				/* The interested socket is ready to be read. */
-				c++;
+				count++;
 			}
 			else {
 				/* The interested socket is not ready to be read. */
@@ -25,7 +26,7 @@ int select(SOCKET nfds, fd_set *__readfds, fd_set *__writefds,
 		if((__writefds != NULL) && FD_ISSET(i, __writefds)) {
 			if(IsSocketReady2Write(i)) {
 				/* The interested socket is ready to be written. */
-				c++;
+				count++;
 			}
 			else {
 				/* The interested socket is not ready to be written. */
@@ -39,5 +40,5 @@ int select(SOCKET nfds, fd_set *__readfds, fd_set *__writefds,
 		}
 	}
 
-	return c;
+	return count;
 }
