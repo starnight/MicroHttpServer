@@ -34,6 +34,8 @@ int select(SOCKET nfds, fd_set *__readfds, fd_set *__writefds,
 		}
 		if((__exceptfds != NULL) && FD_ISSET(i, __exceptfds)) {
 			// To do: List exception sockets.
+			/* Zero __exceptfds for now. */
+			FD_ZERO(__exceptfds);
 		}
 	}
 
