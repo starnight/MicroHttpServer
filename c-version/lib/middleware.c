@@ -7,18 +7,19 @@
 typedef struct _Route {
 	HTTPMethod method;
 	char *uri;
-	HTTPREQ_CALLBACK callback;
+	SAF saf;
 } Route;
 
 Route routes[MAX_HTTP_ROUTES];
 int routes_used = 0;
 
-/* Add an URI and the corresponding callback into the route table. */
-int AddRoute(HTTPMethod method, char *uri, HTTPREQ_CALLBACK callback) {
+/* Add an URI and the corresponding server application function into the route
+   table. */
+int AddRoute(HTTPMethod method, char *uri, SAF saf) {
 	if(routes_used < MAX_HTTP_ROUTES) {
 		routes[routes_used].method = method;
 		routes[routes_used].uri = uri;
-		routes[routes_used].callback = callback;
+		routes[routes_used].saf = saf;
 		routes_used++;
 
 		return routes_used;
@@ -120,8 +121,8 @@ void Dispatch(HTTPReqMessage *req, HTTPResMessage *res) {
 				continue;
 
 			if((found == 1) && ((req_uri[n] == '\0') || (req_uri[n] == '\?'))) {
-				/* Found and dispatch the callback function. */
-				routes[i].callback(req, res);
+				/* Found and dispatch the server application function. */
+				routes[i].saf(req, res);
 				break;
 			}
 			else {
