@@ -1,6 +1,6 @@
 #include <string.h>
 #include <stdio.h>
-#ifdef FILE_SYSTEM
+#if ENABLE_STATIC_FILE == 1
 #include <sys/stat.h>
 #endif
 #include "middleware.h"
@@ -9,18 +9,19 @@
 typedef struct _Route {
 	HTTPMethod method;
 	char *uri;
-	HTTPREQ_CALLBACK callback;
+	SAF saf;
 } Route;
 
 Route routes[MAX_HTTP_ROUTES];
 int routes_used = 0;
 
-/* Add an URI and the corresponding callback into the route table. */
-int AddRoute(HTTPMethod method, char *uri, HTTPREQ_CALLBACK callback) {
+/* Add an URI and the corresponding server application function into the route
+   table. */
+int AddRoute(HTTPMethod method, char *uri, SAF saf) {
 	if(routes_used < MAX_HTTP_ROUTES) {
 		routes[routes_used].method = method;
 		routes[routes_used].uri = uri;
-		routes[routes_used].callback = callback;
+		routes[routes_used].saf = saf;
 		routes_used++;
 
 		return routes_used;
@@ -30,7 +31,7 @@ int AddRoute(HTTPMethod method, char *uri, HTTPREQ_CALLBACK callback) {
 	}
 }
 
-#ifdef FILE_SYSTEM
+#if ENABLE_STATIC_FILE == 1
 /* Try to read static files under static folder. */
 uint8_t _ReadStaticFiles(HTTPReqMessage *req, HTTPResMessage *res) {
 	uint8_t found = 0;
@@ -43,8 +44,8 @@ uint8_t _ReadStaticFiles(HTTPReqMessage *req, HTTPResMessage *res) {
 	int size;
 	char path[128] = {STATIC_FILE_FOLDER};
 
-	char header1[] = "HTTP/1.1 200 OK\r\nConnection: close\r\n";
-	char header2[] = "Content-Type: text/html; charset=UTF-8\r\n\r\n";
+	char header[] = "HTTP/1.1 200 OK\r\nConnection: close\r\n"
+	                "Content-Type: text/html; charset=UTF-8\r\n\r\n";
 
 	/* Prevent Path Traversal. */
 	for(i=0; i<n; i++) {
@@ -72,12 +73,9 @@ uint8_t _ReadStaticFiles(HTTPReqMessage *req, HTTPResMessage *res) {
 
 			if(size < MAX_BODY_SIZE) {
 				/* Build HTTP OK header. */
-				n = strlen(header1);
-				memcpy(res->_buf, header1, n);
+				n = strlen(header);
+				memcpy(res->_buf, header, n);
 				i = n;
-				n = strlen(header2);
-				memcpy(res->_buf + i, header2, n);
-				i += n;
 
 				/* Build HTTP body. */
 				n = fread(res->_buf + i, 1, size, fp);
@@ -124,8 +122,8 @@ void Dispatch(HTTPReqMessage *req, HTTPResMessage *res) {
 				continue;
 
 			if((found == 1) && ((req_uri[n] == '\0') || (req_uri[n] == '\?'))) {
-				/* Found and dispatch the callback function. */
-				routes[i].callback(req, res);
+				/* Found and dispatch the server application function. */
+				routes[i].saf(req, res);
 				break;
 			}
 			else {
@@ -134,7 +132,7 @@ void Dispatch(HTTPReqMessage *req, HTTPResMessage *res) {
 		}
 	}
 
-#ifdef FILE_SYSTEM
+#if ENABLE_STATIC_FILE == 1
 	/* Check static files. */
 	if(found != 1)
 		found = _ReadStaticFiles(req, res);
