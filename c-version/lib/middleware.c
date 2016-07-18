@@ -44,8 +44,8 @@ uint8_t _ReadStaticFiles(HTTPReqMessage *req, HTTPResMessage *res) {
 	int size;
 	char path[128] = {STATIC_FILE_FOLDER};
 
-	char header1[] = "HTTP/1.1 200 OK\r\nConnection: close\r\n";
-	char header2[] = "Content-Type: text/html; charset=UTF-8\r\n\r\n";
+	char header[] = "HTTP/1.1 200 OK\r\nConnection: close\r\n"
+	                "Content-Type: text/html; charset=UTF-8\r\n\r\n";
 
 	/* Prevent Path Traversal. */
 	for(i=0; i<n; i++) {
@@ -73,12 +73,9 @@ uint8_t _ReadStaticFiles(HTTPReqMessage *req, HTTPResMessage *res) {
 
 			if(size < MAX_BODY_SIZE) {
 				/* Build HTTP OK header. */
-				n = strlen(header1);
-				memcpy(res->_buf, header1, n);
+				n = strlen(header);
+				memcpy(res->_buf, header, n);
 				i = n;
-				n = strlen(header2);
-				memcpy(res->_buf + i, header2, n);
-				i += n;
 
 				/* Build HTTP body. */
 				n = fread(res->_buf + i, 1, size, fp);
