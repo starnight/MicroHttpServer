@@ -30,6 +30,7 @@ int AddRoute(HTTPMethod method, char *uri, SAF saf) {
 }
 
 /* Try to read static files under static folder. */
+#if ENABLE_STATIC_FILE == 1
 uint8_t _ReadStaticFiles(HTTPReqMessage *req, HTTPResMessage *res) {
 	uint8_t found = 0;
 	int8_t depth = 0;
@@ -91,6 +92,7 @@ uint8_t _ReadStaticFiles(HTTPReqMessage *req, HTTPResMessage *res) {
 
 	return found;
 }
+#endif
 
 void _NotFound(HTTPReqMessage *req, HTTPResMessage *res) {
 	uint8_t n;
@@ -132,8 +134,10 @@ void Dispatch(HTTPReqMessage *req, HTTPResMessage *res) {
 	}
 
 	/* Check static files. */
+#if ENABLE_STATIC_FILE == 1
 	if(found != 1)
 		found = _ReadStaticFiles(req, res);
+#endif
 
 	/* It is really not found. */
 	if(found != 1)
