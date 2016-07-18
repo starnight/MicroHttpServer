@@ -8,12 +8,12 @@ class Routes:
 		self._Routes = []
 		mimetypes.init()
 
-	def AddRoute(self, method, uri, callback):
+	def AddRoute(self, method, uri, saf):
 		'''Add an URI into the route table.'''
-		self._Routes.append([method, uri, callback])
+		self._Routes.append([method, uri, saf])
 
 	def Dispatch(self, req, res):
-		'''Dispatch an URI according to the route table.'''
+		'''Dispatch an SAF according to the route table.'''
 		method = ""
 		uri = ""
 		for fv in req.Header:
