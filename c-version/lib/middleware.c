@@ -1,6 +1,8 @@
 #include <string.h>
 #include <stdio.h>
+#if ENABLE_STATIC_FILE == 1
 #include <sys/stat.h>
+#endif
 #include "middleware.h"
 
 /* Route */
@@ -29,8 +31,8 @@ int AddRoute(HTTPMethod method, char *uri, SAF saf) {
 	}
 }
 
-/* Try to read static files under static folder. */
 #if ENABLE_STATIC_FILE == 1
+/* Try to read static files under static folder. */
 uint8_t _ReadStaticFiles(HTTPReqMessage *req, HTTPResMessage *res) {
 	uint8_t found = 0;
 	int8_t depth = 0;
@@ -133,8 +135,8 @@ void Dispatch(HTTPReqMessage *req, HTTPResMessage *res) {
 		}
 	}
 
-	/* Check static files. */
 #if ENABLE_STATIC_FILE == 1
+	/* Check static files. */
 	if(found != 1)
 		found = _ReadStaticFiles(req, res);
 #endif
