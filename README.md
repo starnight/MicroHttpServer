@@ -2,6 +2,8 @@
 
 It is a really simple HTTP server for prototyping.
 
+One of the major purpose is that it can be ported on an embedded system (including micro controller unit level).
+
 For writing Micro HTTP Server, the developer has studied [eserv](https://code.google.com/p/eserv/source/browse/) and [Tiny HTTPd](http://tinyhttpd.cvs.sourceforge.net/viewvc/tinyhttpd/tinyhttpd/).
 
 ## Demo
@@ -54,6 +56,7 @@ Open your web browser and access the URL: http://localhost:8001
     * middleware.c: The source file of C Version Micro HTTP Server middleware.
   * static/: Place the static files: HTML, JS, Images ... , which could be access directly.
   * Makefile: The makefile of this C Version Micro HTTP Server example.
+* FreeRTOS/: Place the example of Micro HTTP Server ported on FreeRTOS.
 * .travis.yml: The continuous integration build script for Travis CI.
 * LICENSE.md: The BSD license file.
 * README.md: This read me file.
