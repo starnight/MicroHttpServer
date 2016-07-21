@@ -2,8 +2,12 @@
 
 import mimetypes
 
+STATIC_FILE_FOLDER = "static"
+
 class Routes:
 	'''Define the feature of route for URIs.'''
+	global STATIC_FILE_FOLDER
+
 	def __init__(self):
 		self._Routes = []
 		mimetypes.init()
@@ -55,7 +59,7 @@ class Routes:
 		if depth >= 0:
 			# Try to open and load the static file.
 			try:
-				filename = "static/{}".format(uri)
+				filename = "{}/{}".format(STATIC_FILE_FOLDER, uri)
 				f = open(filename, "r")
 				res.Body = f.read()
 				f.close()

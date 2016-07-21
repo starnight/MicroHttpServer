@@ -6,6 +6,8 @@ import datetime
 
 MAX_HEADER_SIZE = 2048
 MAX_BODY_SIZE = 4096
+MHS_PORT = 8000
+MAX_HTTP_CLIENT = 5
 HTTP_SERVER = "Micro PyHTTP Server"
 
 class HTTPError(Exception):
@@ -36,9 +38,13 @@ def _HelloPage(req, res):
 	res.Header.append(["Content-Type", "text/html; charset=UTF-8;"])
 
 class HTTPServer:
-	def __init__(self, host="", port=8000):
+	global MHS_PORT
+	global MAX_HTTP_CLIENT
+
+	def __init__(self, host="", port=MHS_PORT):
 		self.HOST = host
 		self.PORT = port
+		self.MAX_CLIENT = MAX_HTTP_CLIENT
 		self._insocks = []
 		self._outsocks = []
 		# Create server socket.
@@ -50,7 +56,7 @@ class HTTPServer:
 		self.sock.bind((self.HOST, self.PORT))
 
 		# Start server socket listening.
-		self.sock.listen(5)
+		self.sock.listen(self.MAX_CLIENT)
 		self._insocks.append(self.sock)
 
 	def Run(self, callback):
