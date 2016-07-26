@@ -63,9 +63,14 @@ Open your web browser and access the URL: http://localhost:8001
 
 ## Reference
 
-* [RFC 2616](https://tools.ietf.org/html/rfc2616)
+* [RFC 2616 HTTP/1.1](https://tools.ietf.org/html/rfc2616)
+* [RFC 3875 CGI](https://tools.ietf.org/html/rfc3875)
+* [Wiki FastCGI](https://en.wikipedia.org/wiki/FastCGI)
+* [Netscape Server Application Programming Interface (NSAPI)](https://en.wikipedia.org/wiki/Netscape_Server_Application_Programming_Interface)
+* [Django & Twisted by Amber Brown @ PyCon Taiwan 2016](https://www.youtube.com/watch?v=4b3rKZTW3WA)
 * [eserv](https://code.google.com/p/eserv/source/browse/)
 * [Tiny HTTPd](http://tinyhttpd.cvs.sourceforge.net/viewvc/tinyhttpd/tinyhttpd/)
+* [GNU Libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/)
 
 ## License
 
