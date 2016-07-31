@@ -1,3 +1,5 @@
+/* This file is reference from files of Linux's header files. */
+
 #ifndef __SELECT_H__
 #define __SELECT_H__
 

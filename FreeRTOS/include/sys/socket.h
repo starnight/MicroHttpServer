@@ -1,3 +1,5 @@
+/* This file is reference from files of Linux's header files. */
+
 #ifndef __SOCKET_H__
 #define __SOCKET_H__
 
