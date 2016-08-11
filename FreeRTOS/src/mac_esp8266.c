@@ -187,8 +187,16 @@ void GetESP8266Request(void) {
 		/* Go parse ID request. */
 		GetClientRequest();
 	}
+	else if(strncmp(USART_rBuf, "WIFI DISCONNECT", 15) == 0) {
+		/* Change ESP8266 UART channel state is not ready for internet usage. */
+		_ESP8266_state = ESP8266_NOT_LINKED;
+	}
 	else if(strncmp(USART_rBuf, "WIFI CONNECTED", 14) == 0) {
 		/* Ignore for now. */
+	}
+	else if(strncmp(USART_rBuf, "Ai-Thinker Technology Co.,Ltd.", 30) == 0) {
+		/* Change ESP8266 UART channel acts as a WiFi NIC. */
+		_ESP8266_state = ESP8266_INITIALIZED;
 	}
 }
 
@@ -294,6 +302,53 @@ void InitESP8266(void) {
 	else {
 		USART_Printf(USART2, "Create TX task failed\r\n");
 	}
+}
+
+int JoinAccessPoint(char *ap, char *pwd) {
+	char connect_ap[52];
+	char res[60];
+	ssize_t l, n;
+
+	char debug[60];
+
+	/* Make sure there is no pending message of ESP8266 RX data. */
+	while(USART_Readable(USART6)) {
+		vTaskDelay(100);
+	}
+	/* Block to take ESP8266 UART channel usage mutex. */
+	while(xSemaphoreTake(xUSART_Mutex, 100) != pdTRUE) {
+		vTaskDelay(50);
+	}
+
+	/* ESP8266 joins an AP. */
+	snprintf(connect_ap, 50, "AT+CWJAP=\"%s\",\"%s\"\r\n", ap, pwd);
+	USART_Send(USART6, connect_ap, strlen(connect_ap), NON_BLOCKING);
+	l = strlen(connect_ap) + 1;
+	n = 0;
+	do {
+		n += USART_Read(USART6, res, l-n, BLOCKING);
+		if(n < l)
+			vTaskDelay(1000);
+	} while(n < l);
+	res[n] = '\0';
+	strncpy(connect_ap+(strlen(connect_ap)-1), "\r\n", 3);
+
+	if(strncmp(res, connect_ap, strlen(connect_ap)) != 0) {
+		/* Releas ESP8266 UART channel usage mutex. */
+		xSemaphoreGive(xUSART_Mutex);
+
+		snprintf(debug, 60, "Join %s AP failed\r\n", ap);
+		USART_Printf(USART2, debug);
+		return -1;
+	}
+
+	/* Releas ESP8266 UART channel usage mutex. */
+	xSemaphoreGive(xUSART_Mutex);
+
+	snprintf(debug, 60, "Joined %s AP\r\n", ap);
+	USART_Printf(USART2, debug);
+
+	return 0;
 }
 
 int HaveInterfaceIP(uint32_t *pip) {
