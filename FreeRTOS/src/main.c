@@ -17,16 +17,28 @@
 #include "middleware.h"
 #include "app.h"
 
+#define _AP_SSID	"AP SSID"
+#define _AP_PWD		"AP password"
+
 /* Micro HTTP Server. */
 void MicroHTTPServer_task() {
 	HTTPServer srv;
 	uint32_t ip;
 
 	/* Make sure the internet is worked. */
-	while(GetESP8266State() != ESP8266_LINKED) {
+	while(GetESP8266State() < ESP8266_INITIALIZED) {
+		vTaskDelay(portTICK_PERIOD_MS);
+	}
+	USART_Printf(USART2, "WiFi NIC is initialized.\r\n");
+	/* Join designated AP. */
+	while(JoinAccessPoint(_AP_SSID, _AP_PWD) == -1);
+	/* Make sure it is connected with AP. */
+	while(GetESP8266State() < ESP8266_LINKED) {
 		vTaskDelay(portTICK_PERIOD_MS);
 	}
 
+	/* Delay a period for busy ESP8266 after joined an AP. */
+	vTaskDelay(1500*portTICK_PERIOD_MS);
 	/* Get the server IP. */
 	HaveInterfaceIP(&ip);
 
