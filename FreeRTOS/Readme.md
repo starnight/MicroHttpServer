@@ -44,14 +44,16 @@ The WiFi module [ESP01](https://www.hackster.io/esp/products/esp8266-esp-01) is 
 2. Edit the Makefile to modify the "FREERTOS\_DIR" to the path of FreeRTOS
    library.
 
-3. Compile: ``` make ```
+3. Define the macroes of ```_AP_SSID``` and ```_AP_PWD``` in src/main.c which are the SSID and password of the AP.
 
-4. Flash to STM32F407: ``` make flash ```
+4. Compile: ``` make ```
 
-5. Get a terminal connected with the right UART settings to USART2 on STM32F407. (115200 baud rate, 8 data bits, 1 stop bit, no parity check and non-flow control.)
+5. Flash to STM32F407: ``` make flash ```
 
-6. Get a ESP8266 connected with the right UART settings to USART6 on STM32F407. (115200 baud rate, 8 data bits, 1 stop bit, no parity check and non-flow control.)
+6. Get a terminal connected with the right UART settings to USART2 on STM32F407. (115200 baud rate, 8 data bits, 1 stop bit, no parity check and non-flow control.)
 
-7. Reset the power of STM32F4-Discovery.
+7. Get a ESP8266 connected with the right UART settings to USART6 on STM32F407. (115200 baud rate, 8 data bits, 1 stop bit, no parity check and non-flow control.)
 
-8. Wait the Micro HTTP Server being started. Then use a browser to browse the defined web pages or web APIs.
+8. Reset the power of STM32F4-Discovery.
+
+9. Wait the Micro HTTP Server being started. Then use a browser to browse the defined web pages or web APIs.
