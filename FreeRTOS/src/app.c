@@ -8,7 +8,14 @@ void HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
 	char *p;
 	char header1[] = "HTTP/1.1 200 OK\r\nConnection: close\r\n";
 	char header2[] = "Content-Type: text/html; charset=UTF-8\r\n\r\n";
-	char body1[] = "<html><body>Hello!<br>許功蓋<br>";
+	char body1[] = "<html><body>Hello!<br>許功蓋<br>" \
+				   "<form method='POST' action='led'>" \
+				   "GREEN LED=<input type='text' name='GREEN' value='0' /><br/>" \
+				   "ORANGE LED=<input type='text' name='ORANGE' value='0' /><br/>" \
+				   "RED LED=<input type='text' name='RED' value='0' /><br/>" \
+				   "BLUE LED=<input type='text' name='BLUE' value='0' /><br />" \
+				   "<input type='submit' />" \
+				   "</form>";
 	char body2[] = "</body></html>";
 
 	/* Build header. */
@@ -171,13 +178,10 @@ void Fib(HTTPReqMessage *req, HTTPResMessage *res) {
 #define NUM_LEDS	4
 
 void LED(HTTPReqMessage *req, HTTPResMessage *res) {
-	char *p;
-	char header[] = "HTTP/1.1 200 OK\r\nConnection: close\r\n" \
-					"Content-Type: text/text; charset=UTF-8\r\n\r\n";
 	char *LED_str[NUM_LEDS] = {"GREEN=", "ORANGE=", "RED=", "BLUE="};
 	uint32_t LEDs[NUM_LEDS] = {GREEN, ORANGE, RED, BLUE};
 	char *str;
-	int n, i;
+	int i;
 	int8_t state, c;
 
 	/* Go through the LEDs. */
@@ -204,17 +208,6 @@ void LED(HTTPReqMessage *req, HTTPResMessage *res) {
 		}
 	}
 
-	/* Build response. */
-	i = 0;
-	/* Build response header. */
-	p = (char *)res->_buf;
-	n = strlen(header);
-	memcpy(p, header, n);
-	p += n;
-	i += n;
-	/* Build response body. */
-	memcpy(p, "OK", 2);
-	i += 2;
-
-	res->_index = i;
+	/* Re-render the Hello page. */
+	HelloPage(req, res);
 }
