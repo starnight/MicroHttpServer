@@ -215,7 +215,7 @@ int socket (int __domain, int __type, int __protocol);
 int bind (int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len);
 
 /* Send N bytes of BUF to socket FD.  Returns the number sent or -1.  */
-ssize_t send (int __fd, __const void *__buf, size_t __n, int __flags);
+ssize_t send (int __fd, void *__buf, size_t __n, int __flags);
 
 /* Read N bytes into BUF from socket FD.
    Returns the number read or -1 for errors.  */

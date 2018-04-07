@@ -72,7 +72,7 @@ int accept (int __fd, __SOCKADDR_ARG __addr, socklen_t *__restrict __addr_len) {
 }
 
 /* Send N bytes of BUF to socket FD.  Returns the number sent or -1.  */
-ssize_t send (int __fd, __const void *__buf, size_t __n, int __flags) {
+ssize_t send (int __fd, void *__buf, size_t __n, int __flags) {
 	return SendSocket(__fd, __buf, __n, __flags);
 }
 

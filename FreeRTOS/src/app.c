@@ -4,7 +4,8 @@
 #include "app.h"
 
 void HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
-	int n, i = 0, j;
+	int n, i = 0;
+	unsigned int j;
 	char *p;
 	char header1[] = "HTTP/1.1 200 OK\r\nConnection: close\r\n";
 	char header2[] = "Content-Type: text/html; charset=UTF-8\r\n\r\n";

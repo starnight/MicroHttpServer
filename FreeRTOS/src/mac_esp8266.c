@@ -704,7 +704,7 @@ int IsSocketReady2Read(SOCKET s) {
 	f = 0;
 
 	/* Check the socket's state. */
-	if((0 <= id) && (id <= MAX_CLIENT))
+	if(id <= MAX_CLIENT)
 		if((clisock[id].state & mask) == mask)
 			f = 1;
 	
@@ -719,7 +719,7 @@ int IsSocketReady2Write(SOCKET s) {
 	f = 0;
 
 	/* Check the socket's state. */
-	if((0 <= id) && (id < MAX_CLIENT))
+	if(id < MAX_CLIENT)
 		if((clisock[id].state & mask) == (1 << SOCKET_USING))
 			f = 1;
 
