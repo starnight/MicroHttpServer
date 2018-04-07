@@ -9,7 +9,7 @@ PROJ_NAME=FreeRTOS-STM32F4-UART
 # This is the directory containing the firmware package,
 # the unzipped folder downloaded from here:
 # http://www.st.com/web/en/catalog/tools/PF257904
-STM_DIR=../../STM32F4xx_DSP_StdPeriph_Lib_V1.6.1
+STM_DIR=../../STM32F4xx_DSP_StdPeriph_Lib_V1.8.0
 
 # This is where the source files are located,
 # which are not in the current directory
@@ -18,7 +18,7 @@ STM_DIR=../../STM32F4xx_DSP_StdPeriph_Lib_V1.6.1
 STM_SRC = $(STM_DIR)/Libraries/STM32F4xx_StdPeriph_Driver/src
 
 # This is the directory containing FreeRTOS
-FREERTOS_DIR=../../FreeRTOSv9.0.0/FreeRTOS
+FREERTOS_DIR=../../FreeRTOSv10.0.1/FreeRTOS
 
 # These are where the FreeRTOS files located
 FREERTOS_SRC=$(FREERTOS_DIR)/Source

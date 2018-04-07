@@ -292,7 +292,7 @@ void InitESP8266(void) {
 	/* Create ESP8266 command task to USART TX. */
 	xReturned = xTaskCreate(vESP8266TTask,
 							"ESP8266 TX",
-							256,
+							300,
 							NULL,
 							tskIDLE_PRIORITY + 1,
 							&xCommandTask);
