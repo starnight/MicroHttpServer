@@ -41,9 +41,8 @@ uint8_t usart_stream_idx;
 
 /* Set state USART RX pipe enable flag. */
 void USART_SetRxPipe(USART_TypeDef *USARTx, int f) {
-	if(USARTx == USART6) {
+	if(USARTx == USART6)
 		rxPipeState = f;
-	}
 }
 
 /* Push an element into the queue. */
@@ -113,12 +112,10 @@ int PopQueue(RX_QUEUE *__q, void *__pe) {
 
 /* Get how many element in the queue. */
 int QueueMessagesWaiting(RX_QUEUE *__q) {
-	if(__q->ovr) {
+	if(__q->ovr)
 		return (__q->rLen - __q->rIdx + __q->wIdx);
-	}
-	else {
+	else
 		return (__q->wIdx - __q->rIdx);
-	}
 }
 
 /* Clear the elements in the queue. */
@@ -263,12 +260,10 @@ ssize_t USART_Read(USART_TypeDef *USARTx, void *buf, ssize_t l, uint8_t flags) {
 
 /* Check USART RX buffer is readable. */
 int USART_Readable(USART_TypeDef *USARTx) {
-	if(USARTx == USART6) {
+	if(USARTx == USART6)
 		return QueueMessagesWaiting(rxQueue);
-	}
-	else {
+	else
 		return 0;
-	}
 }
 
 /* Send bytes array with designated length through USART. */
@@ -325,12 +320,8 @@ void USART6_IRQHandler(void) {
 #ifdef MIRROR_USART6
 		USART_SendByte(USART2, rxdata);
 #endif
-		if(rxPipeState > 0) {
-			if(PushQueue(rxQueue, &rxdata)) {
-			}
-			else {
-			}
-		}
+		if(rxPipeState > 0)
+			PushQueue(rxQueue, &rxdata);
 	}
 
 	/* USART6 TX interrupt. */

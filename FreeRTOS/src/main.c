@@ -83,13 +83,13 @@ int main(void) {
 	/* Add the task into FreeRTOS task scheduler. */
 	/* Add Micro HTTP Server. */
 	xReturned = xTaskCreate(MicroHTTPServer_task,
-							"Micro HTTP Server",
-							MICROHTTPSERVER_STACK_SIZE,
-							NULL,
-							tskIDLE_PRIORITY + 1,
-							NULL);
-	if(xReturned == pdPASS) {
-	}
+				"Micro HTTP Server",
+				MICROHTTPSERVER_STACK_SIZE,
+				NULL,
+				tskIDLE_PRIORITY + 1,
+				NULL);
+	if(xReturned != pdPASS)
+		return -1;
 
 	/* Start FreeRTOS task scheduler. */
 	vTaskStartScheduler();

@@ -11,7 +11,7 @@
 
 /* Define USART sending mode. */
 #define BLOCKING		0
-#define NON_BLOCKING	1
+#define NON_BLOCKING		1
 
 #define RX_QUEUELEN		512
 

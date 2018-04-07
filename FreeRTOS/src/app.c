@@ -9,13 +9,13 @@ void HelloPage(HTTPReqMessage *req, HTTPResMessage *res) {
 	char header1[] = "HTTP/1.1 200 OK\r\nConnection: close\r\n";
 	char header2[] = "Content-Type: text/html; charset=UTF-8\r\n\r\n";
 	char body1[] = "<html><body>Hello!<br>許功蓋<br>" \
-				   "<form method='POST' action='led'>" \
-				   "GREEN LED=<input type='text' name='GREEN' value='0' /><br/>" \
-				   "ORANGE LED=<input type='text' name='ORANGE' value='0' /><br/>" \
-				   "RED LED=<input type='text' name='RED' value='0' /><br/>" \
-				   "BLUE LED=<input type='text' name='BLUE' value='0' /><br />" \
-				   "<input type='submit' />" \
-				   "</form>";
+		       "<form method='POST' action='led'>" \
+		       "GREEN LED=<input type='text' name='GREEN' value='0' /><br/>" \
+		       "ORANGE LED=<input type='text' name='ORANGE' value='0' /><br/>" \
+		       "RED LED=<input type='text' name='RED' value='0' /><br/>" \
+		       "BLUE LED=<input type='text' name='BLUE' value='0' /><br />" \
+		       "<input type='submit' />" \
+		       "</form>";
 	char body2[] = "</body></html>";
 
 	/* Build header. */
@@ -200,12 +200,10 @@ void LED(HTTPReqMessage *req, HTTPResMessage *res) {
 		/* Get the config state. */
 		state = atoi(str + strlen(LED_str[i]));
 		/* Set the state of the corresponding LED. */
-		if(state == 1) {
+		if(state == 1)
 			GPIO_SetBits(LEDS_GPIO_PORT, LEDs[i]);
-		}
-		else if(state == 0) {
+		else if(state == 0)
 			GPIO_ResetBits(LEDS_GPIO_PORT, LEDs[i]);
-		}
 	}
 
 	/* Re-render the Hello page. */

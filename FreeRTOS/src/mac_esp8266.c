@@ -96,18 +96,16 @@ void GetClientRequest(void) {
 
 	if(sscanf(USART_rBuf, "+IPD,%d,%d:", &id, &len) == 2) {
 		clisock[id].rlen = len;
-		if(len > MAX_SOCKETBUFLEN) {
+		if(len > MAX_SOCKETBUFLEN)
 			len = MAX_SOCKETBUFLEN;
-		}
 
 		n = 0;
 		while(n < len) {
 			if(USART_Read(USART6, &c, 1, NON_BLOCKING) > 0) {
 				/* Read 1 byte from ESP8266 UART channel and
 				 * send it to related scoket. */
-				if(xQueueSendToBack(clisock[id].rxQueue, &c, 0) == pdTRUE) {
+				if(xQueueSendToBack(clisock[id].rxQueue, &c, 0) == pdTRUE)
 					n++;
-				}
 			}
 			else {
 				/* Wait for read 1 byte from ESP8266 UART channel. */
@@ -202,8 +200,6 @@ void GetESP8266Request(void) {
 
 /* ESP8266 UART channel request parsing task. */
 void vESP8266RTask(void *__p) {
-	char s[2] = "0";
-	
 	/* Enable the pipe with ESP8266 UART channel. */
 	USART_EnableRxPipe(USART6);
 
@@ -231,13 +227,13 @@ void vESP8266TTask(void *__p) {
 		/* Try to take ESP8266 UART channel usage mutex. */
 		if(xSemaphoreTake(xUSART_Mutex, 100) == pdTRUE) {
 			switch(_ESP8266_Command){
-				case ESP8266_SEND_COMMAND:
-					vSendSocketTask(&_working_sock);
-					break;
-				case ESP8266_CLOSE_COMMAND:
-					vCloseSocketTask(&_working_sock);
-					break;
-				default: break;
+			case ESP8266_SEND_COMMAND:
+				vSendSocketTask(&_working_sock);
+				break;
+			case ESP8266_CLOSE_COMMAND:
+				vCloseSocketTask(&_working_sock);
+				break;
+			default: break;
 			}
 			/* Send command finished and releas ESP8266 UART channel usage
 			 * mutex. */
@@ -278,30 +274,25 @@ void InitESP8266(void) {
 
 	/* Create ESP8266 parsing request from USART RX task. */
 	xReturned = xTaskCreate(vESP8266RTask,
-						    "ESP8266 RX",
-							300,
-							NULL,
-							tskIDLE_PRIORITY + 1,
-							&xHandle);
-	if(xReturned == pdPASS) {
-	}
-	else {
+				"ESP8266 RX",
+				300,
+				NULL,
+				tskIDLE_PRIORITY + 1,
+				&xHandle);
+	if(xReturned != pdPASS)
 		USART_Printf(USART2, "Create RX task failed\r\n");
-	}
 	
 	/* Create ESP8266 command task to USART TX. */
 	xReturned = xTaskCreate(vESP8266TTask,
-							"ESP8266 TX",
-							300,
-							NULL,
-							tskIDLE_PRIORITY + 1,
-							&xCommandTask);
-	if(xReturned == pdPASS) {
+				"ESP8266 TX",
+				300,
+				NULL,
+				tskIDLE_PRIORITY + 1,
+				&xCommandTask);
+	if(xReturned == pdPASS)
 		vTaskSuspend(xCommandTask);
-	}
-	else {
+	else
 		USART_Printf(USART2, "Create TX task failed\r\n");
-	}
 }
 
 int JoinAccessPoint(char *ap, char *pwd) {
@@ -312,13 +303,11 @@ int JoinAccessPoint(char *ap, char *pwd) {
 	char debug[60];
 
 	/* Make sure there is no pending message of ESP8266 RX data. */
-	while(USART_Readable(USART6)) {
+	while(USART_Readable(USART6))
 		vTaskDelay(100);
-	}
 	/* Block to take ESP8266 UART channel usage mutex. */
-	while(xSemaphoreTake(xUSART_Mutex, 100) != pdTRUE) {
+	while(xSemaphoreTake(xUSART_Mutex, 100) != pdTRUE)
 		vTaskDelay(50);
-	}
 
 	/* ESP8266 joins an AP. */
 	snprintf(connect_ap, 50, "AT+CWJAP=\"%s\",\"%s\"\r\n", ap, pwd);
@@ -360,13 +349,13 @@ int HaveInterfaceIP(uint32_t *pip) {
 	char debug[30];
 
 	/* Make sure there is no pending message of ESP8266 RX data. */
-	while(USART_Readable(USART6)) {
+	while(USART_Readable(USART6))
 		vTaskDelay(100);
-	}
+
 	/* Block to take ESP8266 UART channel usage mutex. */
-	while(xSemaphoreTake(xUSART_Mutex, 100) != pdTRUE) {
+	while(xSemaphoreTake(xUSART_Mutex, 100) != pdTRUE)
 		vTaskDelay(50);
-	}
+
 	/* Get ESP8266 station IP. */
 	USART_Send(USART6, get_ip, strlen(get_ip), NON_BLOCKING);
 	l = strlen(get_ip) + 1;
@@ -397,7 +386,7 @@ int HaveInterfaceIP(uint32_t *pip) {
 
 		if(strncmp(res, "+CIFSR:STAIP,", 13) == 0) {
 			sscanf(res, "+CIFSR:STAIP,\"%d.%d.%d.%d\"",
-				   &ip[0], &ip[1], &ip[2], &ip[3]);
+			       &ip[0], &ip[1], &ip[2], &ip[3]);
 			*pip = ip[0] << 24 + ip[1] << 16 + ip[2] << 8 + ip[3];
 		}
 	}
@@ -414,7 +403,7 @@ int HaveInterfaceIP(uint32_t *pip) {
 
 	if(strncmp(res, "\r\nOK\r\n", 6) == 0) {
 		snprintf(debug, 30, "\tGet ip %d.%d.%d.%d ok!\r\n",
-				 ip[0], ip[1], ip[2], ip[3]);
+			 ip[0], ip[1], ip[2], ip[3]);
 		USART_Printf(USART2, debug);
 		return 0;
 	}
@@ -455,13 +444,13 @@ int BindTcpSocket(uint16_t port) {
 		new_connects = xQueueCreate(MAX_CLIENT, sizeof(SOCKET));
 
 	/* Make sure there is no pending message of ESP8266 RX data. */
-	while(USART_Readable(USART6)) {
+	while(USART_Readable(USART6))
 		vTaskDelay(100);
-	}
+
 	/* Block to take ESP8266 UART channel usage mutex. */
-	while(xSemaphoreTake(xUSART_Mutex, 0) != pdTRUE) {
+	while(xSemaphoreTake(xUSART_Mutex, 0) != pdTRUE)
 		vTaskDelay(50);
-	}
+
 	/* Enable ESP8266 multiple connections. */
 	USART_Send(USART6, mul_con, strlen(mul_con), NON_BLOCKING);
 	l = strlen(mul_con) + strlen("\r\nOK\r\n") + 1;
@@ -472,8 +461,6 @@ int BindTcpSocket(uint16_t port) {
 	res[n] = '\0';
 
 	if(strncmp(res, "AT+CIPMUX=1\r\r\n\r\nOK\r\n", 20) != 0) {
-		for(n=0; n<l; n++) {
-		}
 		/* Releas ESP8266 UART channel usage mutex. */
 		xSemaphoreGive(xUSART_Mutex);
 		return -1;
@@ -536,12 +523,10 @@ ssize_t RecvSocket(SOCKET s, void *buf, size_t len, int f) {
 	pBuf = buf;
 
 	for(i=0; i<len; i++) {
-		if(xQueueReceive(clisock[id].rxQueue, &c, 0)) {
+		if(xQueueReceive(clisock[id].rxQueue, &c, 0))
 			pBuf[i] = c;
-		}
-		else {
+		else
 			break;
-		}
 	}
 	/* Check there are still more bytes to be read. */
 	if(uxQueueMessagesWaiting(clisock[id].rxQueue) > 0)
@@ -567,12 +552,10 @@ void vSendSocketTask(void *__p) {
 
 	while(clisock[id].slen > 0) {
 		/* Split going to send packet into frame size. */
-		if(clisock[id].slen > MAX_SOCKETSENDBUFLEN) {
+		if(clisock[id].slen > MAX_SOCKETSENDBUFLEN)
 			len = MAX_SOCKETSENDBUFLEN;
-		}
-		else {
+		else
 			len = clisock[id].slen;
-		}
 
 		/* Have send frame header which is send command. */
 		snprintf(send_header, 30, "AT+CIPSEND=%d,%d\r\n", id, len);
@@ -589,10 +572,9 @@ void vSendSocketTask(void *__p) {
 		res[n] = '\0';
 
 		snprintf(send_header, 30, "AT+CIPSEND=%d,%d\r\r\n\r\nOK\r\n> ",
-				 id, len);
-		if(strncmp(res, send_header, strlen(send_header)) != 0) {
+			 id, len);
+		if(strncmp(res, send_header, strlen(send_header)) != 0)
 			break;
-		}
 
 		/* Send socket payload to ESP8266. */
 		USART_Send(USART6, clisock[id].sbuf, len, NON_BLOCKING);
@@ -604,8 +586,6 @@ void vSendSocketTask(void *__p) {
 			if((res[n] == '\n') && (strncmp(&res[n-3], "OK\r\n", 4) == 0)) {
 				n++;
 				break;
-			}
-			else {
 			}
 		}
 		res[n] = '\0';
@@ -634,7 +614,7 @@ ssize_t SendSocket(SOCKET s, void *buf, size_t len, int f) {
 
 		/* Make sure there is no pending message of ESP8266 RX data. */
 		while(USART_Readable(USART6)
-			  || (_ESP8266_Command != ESP8266_NONE_COMMAND)) {
+		      || (_ESP8266_Command != ESP8266_NONE_COMMAND)) {
 			vTaskDelay(100);
 		}
 
@@ -674,9 +654,9 @@ void vCloseSocketTask(void *__p) {
 	/* Have ESP8266 response message. */
 	num_spliter = 0;
 	for(n=0; n<24; n++) {
-		while(USART_Read(USART6, res+n, 1, BLOCKING) <= 0) {
+		while(USART_Read(USART6, res+n, 1, BLOCKING) <= 0)
 			vTaskDelay(100);
-		}
+
 		if(res[n] == '\n')
 			num_spliter++;
 		if(num_spliter == 3) {
@@ -686,9 +666,9 @@ void vCloseSocketTask(void *__p) {
 	}
 	res[n] = 0;
 
-	if(sscanf(res, "%d,CLOSED\r\r\n\r\nOK\r\n", &id) > 0) {
+	if(sscanf(res, "%d,CLOSED\r\r\n\r\nOK\r\n", &id) > 0)
 		clisock[id].state = 0;
-	}
+
 
 	/* Can send another AT command to ESP8266 UART channel. */
 	_ESP8266_Command = ESP8266_NONE_COMMAND;
@@ -700,7 +680,7 @@ int ShutdownSocket(SOCKET s, int how) {
 	if(_ISBIT_SET(clisock[id].state, SOCKET_USING)) {
 		/* Make sure there is no pending message of ESP8266 RX data. */
 		while(USART_Readable(USART6)
-			  || (_ESP8266_Command != ESP8266_NONE_COMMAND)) {
+		      || (_ESP8266_Command != ESP8266_NONE_COMMAND)) {
 			vTaskDelay(1000);
 		}
 
@@ -721,16 +701,12 @@ int IsSocketReady2Read(SOCKET s) {
 	uint8_t mask = (1 << SOCKET_USING) | (1 << SOCKET_READABLE);
 	uint8_t f;
 
-	char debug[80];
-
 	f = 0;
 
 	/* Check the socket's state. */
-	if((0 <= id) && (id <= MAX_CLIENT)) {
-		if((clisock[id].state & mask) == mask) {
+	if((0 <= id) && (id <= MAX_CLIENT))
+		if((clisock[id].state & mask) == mask)
 			f = 1;
-		}
-	}
 	
 	return f;
 }
