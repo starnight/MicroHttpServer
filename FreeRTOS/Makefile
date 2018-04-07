@@ -105,7 +105,7 @@ DEFS    = -DUSE_STDPERIPH_DRIVER -DSTM32F40_41xxx
 DEFS += -DMAX_HTTP_CLIENT=5
 
 ## Compiler options
-CFLAGS  = -ggdb
+#CFLAGS  = -ggdb
 # please do not optimize anything because we are debugging
 CFLAGS += -Os
 CFLAGS += -Wextra -Warray-bounds

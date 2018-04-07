@@ -273,8 +273,8 @@ int _GetBody(HTTPReq *hr) {
 	SOCKET clisock = hr->clisock;
 	HTTPReqMessage *req = &(hr->req);
 	int n = 1;
-	int i = 0;
-	unsigned int len = 0;
+	unsigned int i = 0;
+	int c = 0, len = 0;
 	uint8_t *p;
 
 	DebugMsg("\tParse body\n");
@@ -289,14 +289,14 @@ int _GetBody(HTTPReq *hr) {
 		}
 		p = req->Body;
 		if(len > MAX_BODY_SIZE) len = MAX_BODY_SIZE;
-		for(i=0; (n>0) && (i<len); i+=n) {
-			n = recv(clisock, p + i, (len-i), MSG_PEEK);
+		for(c=0; (n>0) && (c<len); c+=n) {
+			n = recv(clisock, p + c, (len-c), MSG_PEEK);
 		}
 	}
 
-	req->Body[i] = '\0';
+	req->Body[c] = '\0';
 
-	return (n < 0) ? -1 : i;
+	return (n < 0) ? -1 : c;
 }
 
 void _HTTPServerRequest(HTTPReq *hr, HTTPREQ_CALLBACK callback) {
