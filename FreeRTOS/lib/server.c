@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <string.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -269,6 +270,17 @@ int _ParseHeader(HTTPReq *hr) {
 	return i;
 }
 
+int _IsLengthHeader(char *key) {
+	char *len_header = "content-length";
+	size_t i;
+
+	for (i=0; i<strlen(len_header); i++)
+		if (tolower(key[i]) != len_header[i])
+			break;
+
+	return (i == strlen(len_header)) ? 1 : 0;
+}
+
 int _GetBody(HTTPReq *hr) {
 	SOCKET clisock = hr->clisock;
 	HTTPReqMessage *req = &(hr->req);
@@ -282,7 +294,7 @@ int _GetBody(HTTPReq *hr) {
 
 	if(req->Header.Method == HTTP_POST) {
 		for(i=0; i<req->Header.Amount; i++) {
-			if(memcmp(req->Header.Fields[i].key, "Content-Length", 15) == 0) {
+			if(_IsLengthHeader(req->Header.Fields[i].key)) {
 				len = atoi(req->Header.Fields[i].value);
 				break;
 			}

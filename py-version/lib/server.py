@@ -176,7 +176,7 @@ class HTTPServer:
 		i = 0
 		if req.Header[0][1] == "POST":
 			for fv in req.Header:
-				if fv[0] == "Content-Length":
+				if fv[0].lower() == "content-length":
 					cl = int(fv[1])
 					break
 
@@ -207,9 +207,9 @@ class HTTPServer:
 			res.Header.append(["Content-Type", "text/html; charset=UTF-8;"])
 
 		if res.Body is not None:
-			res.Header.append(["Content-Length", len(str.encode(res.Body))])
+			res.Header.append(["content-length", len(str.encode(res.Body))])
 		else:
-			res.Header.append(["Content-Length", 0])
+			res.Header.append(["content-length", 0])
 
 		checked = 0
 		for fv in res.Header:
