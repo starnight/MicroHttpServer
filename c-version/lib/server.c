@@ -1,4 +1,3 @@
-#include <ctype.h>
 #include <string.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -271,14 +270,9 @@ int _ParseHeader(HTTPReq *hr) {
 }
 
 int _IsLengthHeader(char *key) {
-	char *len_header = "content-length";
-	int i;
+	const char *len_header = "content-length";
 
-	for (i=0; i<strlen(len_header); i++)
-		if (tolower(key[i]) != len_header[i])
-			break;
-
-	return (i == strlen(len_header)) ? 1 : 0;
+	return !strncasecmp(key, len_header, strlen(len_header));
 }
 
 int _GetBody(HTTPReq *hr) {
