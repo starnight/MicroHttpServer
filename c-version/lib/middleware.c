@@ -32,6 +32,11 @@ int AddRoute(HTTPMethod method, char *uri, SAF saf) {
 }
 
 #if ENABLE_STATIC_FILE == 1
+
+#ifndef	MAX_PATH_SIZE
+#define	MAX_PATH_SIZE	128
+#endif
+
 /* Try to read static files under static folder. */
 uint8_t _ReadStaticFiles(HTTPReqMessage *req, HTTPResMessage *res) {
 	uint8_t found = 0;
@@ -42,10 +47,14 @@ uint8_t _ReadStaticFiles(HTTPReqMessage *req, HTTPResMessage *res) {
 
 	FILE *fp;
 	int size;
-	char path[128] = {STATIC_FILE_FOLDER};
+	char path[MAX_PATH_SIZE] = {STATIC_FILE_FOLDER};
 
 	char header[] = "HTTP/1.1 200 OK\r\nConnection: close\r\n"
 	                "Content-Type: text/html; charset=UTF-8\r\n\r\n";
+
+	/* Prevent path buffer overflow. */
+	if (strlen(STATIC_FILE_FOLDER) + n >= MAX_PATH_SIZE)
+		return found;
 
 	/* Prevent Path Traversal. */
 	for(i=0; i<n; i++) {
