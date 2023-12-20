@@ -1,0 +1,37 @@
+name: Build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        lang_version: [c-version, py-version]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build
+        if: ${{ matrix.lang_version == 'c-version' }}
+        run: |
+          cd ${{ matrix.lang_version }}
+          make
+
+      - name: Run & Test
+        if: ${{ matrix.lang_version == 'c-version' }}
+        run: |
+          cd ${{ matrix.lang_version }}
+          ./microhttpserver &
+          ../autotest/client.py localhost:8001
+
+      - name: Run & Test
+        if: ${{ matrix.lang_version == 'py-version' }}
+        run: |
+          cd ${{ matrix.lang_version }}
+          ./main.py &
+          ../autotest/client.py localhost:8000
