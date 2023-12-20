@@ -107,6 +107,21 @@ class TestServer(unittest.TestCase):
 
 	def test_Scenario6(self):
 		cli = Client()
+		uri = "/" \
+			  "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" \
+			  "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" \
+			  "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" \
+			  "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+		for i in range(10):
+			self.assertEqual(cli.test_Connect(server), 1)
+			res = cli.test_GetRequest(uri)
+			self.assertIsNotNone(res)
+			self.assertEqual(res.status, 404)
+			self.assertEqual(res.read(22), b"")
+			self.assertEqual(cli.test_Close(), 1)
+
+	def test_Scenario7(self):
+		cli = Client()
 		for i in range(10):
 			self.assertEqual(cli.test_Connect(server), 1)
 			res = cli.test_PostRequest("/index.html", None)
@@ -114,7 +129,7 @@ class TestServer(unittest.TestCase):
 			self.assertEqual(res.status, 404)
 			self.assertEqual(cli.test_Close(), 1)
 
-	def test_Scenario7(self):
+	def test_Scenario8(self):
 		cli = Client()
 		for i in range(40):
 			self.assertEqual(cli.test_Connect(server), 1)
@@ -125,7 +140,7 @@ class TestServer(unittest.TestCase):
 			self.assertEqual(res.read(len(str.encode(pattern))), str.encode(pattern))
 			self.assertEqual(cli.test_Close(), 1)
 
-	def test_Scenario8(self):
+	def test_Scenario9(self):
 		cli = Client()
 		for i in range(40):
 			self.assertEqual(cli.test_Connect(server), 1)
@@ -136,7 +151,7 @@ class TestServer(unittest.TestCase):
 			self.assertEqual(res.read(len(str.encode(pattern))), str.encode(pattern))
 			self.assertEqual(cli.test_Close(), 1)
 
-	def test_Scenario9(self):
+	def test_Scenario10(self):
 		cli = Client()
 		for i in range(10):
 			self.assertEqual(cli.test_Connect(server), 1)
