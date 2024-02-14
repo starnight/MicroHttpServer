@@ -192,6 +192,8 @@ int _ParseHeader(HTTPReq *hr) {
 	DebugMsg("\tParse Header\n");
 	p = (char *)req->_buf;
 	memset(p, 0, MAX_HEADER_SIZE + MAX_BODY_SIZE);
+	req->_index = 0;
+
 	/* GET, PUT ... and a white space are 3 charaters. */
 	n = recv(clisock, p, 3, 0);
 	if(n == 3) {
@@ -209,6 +211,7 @@ int _ParseHeader(HTTPReq *hr) {
 			if(p[i] == ' ') {
 				p[i] = '\0';
 				i += 1;
+				req->_index = i;
 				break;
 			}
 
@@ -218,34 +221,67 @@ int _ParseHeader(HTTPReq *hr) {
 		req->Header.Method = HaveMethod(p);
 
 		/* Parse URI. */
-		req->Header.URI = p + i;
-		for(; n>0; i++) {
+		p += i;
+		req->Header.URI = p;
+		for(i = 0; n>0; i++) {
 			n = recv(clisock, p + i, 1, 0);
+			if(n == -EAGAIN || n == -EWOULDBLOCK) {
+				n = 1;
+				i--;
+				continue;
+			} else if (n <= 0) {
+				return 0;
+			}
+
 			if(p[i] == ' ') {
 				p[i] = '\0';
+				i += 1;
+				req->_index += i;
 				break;
+			}
+
+			if(i > MAX_HTTP_URI_LEN - 2) {
+				strncpy(req->Header.URI, "notfound", 9);
+				req->_index += 9;
+				return req->_index;
 			}
 		}
 
 		/* Parse HTTP version. */
-		if(n > 0) i += 1;
-		req->Header.Version = p + i;
-		/* HTTP/1.1 has 8 charaters. */
-		n = recv(clisock, p + i, 8, 0);
-		for(i+=8; (n>0) && (i<MAX_HEADER_SIZE); i++) {
+		p += i;
+		req->Header.Version = p;
+		for(i = 0; n>0; i++) {
 			n = recv(clisock, p + i, 1, 0);
-			if((l = _CheckLine(p + i))) {
-				if(l == 2) p[i - 1] = '\0';
+			if(n == -EAGAIN || n == -EWOULDBLOCK) {
+				n = 1;
+				i--;
+				continue;
+			} else if (n <= 0) {
+				return 0;
+			}
+
+			/* HTTP/1.1 has 8 charaters */
+			if(i >= 8 && (l = _CheckLine(p + i))) {
 				p[i] = '\0';
+				i += 1;
+				if(l == 2) {
+					p[i - 1] = '\0';
+					i -= 1;
+				}
+				req->_index += i;
 				break;
 			}
+
+			/* 8 charaters adds 2 characters for break line */
+			if(i > 8 + 2 - 2)
+				return 0;
 		}
 
 		/* Parse other fields. */
-		if(n > 0) i += 1;
-		req->Header.Fields[req->Header.Amount].key = p + i;
+		p += i;
+		req->Header.Fields[req->Header.Amount].key = p;
 		end = 0;
-		for(; (n>0) && (i<MAX_HEADER_SIZE) && (req->Header.Amount<MAX_HEADER_FIELDS); i++) {
+		for(i = 0; (n>0) && (req->_index+i < MAX_HEADER_SIZE) && (req->Header.Amount < MAX_HEADER_FIELDS); i++) {
 			n = recv(clisock, p + i, 1, 0);
 			/* Check field key name end. */
 			if((l = _CheckFieldSep(p + i))) {
@@ -256,8 +292,11 @@ int _ParseHeader(HTTPReq *hr) {
 			/* Check header end. */
 			if((l = _CheckLine(p + i))) {
 				if(end == 0) {
-					if(l == 2) p[i - 1] = '\0';
 					p[i] = '\0';
+					if(l == 2) {
+						p[i - 1] = '\0';
+						i -= 1;
+					}
 
 					/* CRLF have 2 characters, so check 2 times new line. */
 					end = 2;
@@ -275,13 +314,13 @@ int _ParseHeader(HTTPReq *hr) {
 				if(end > 0) end -= 1;
 			}
 		}
+		req->_index += i;
 	}
 	if(n < 0) {
 		hr->work_state = CLOSE_SOCKET;
 	}
 
-	req->_index = (n > 0) ? i + 1: i;
-	return i;
+	return req->_index;
 }
 
 int _IsLengthHeader(char *key) {

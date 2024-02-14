@@ -6,9 +6,12 @@
 #include <unistd.h>
 
 #define MAX_HEADER_SIZE  1024
-#define MAX_BODY_SIZE    1024
+#ifndef MAX_HTTP_URI_LEN
+#define MAX_HTTP_URI_LEN 128
+#endif
+#define MAX_BODY_SIZE    2048
 #ifndef MHS_PORT
-#define MHS_PORT         80
+#define MHS_PORT         8001
 #endif
 #ifndef MAX_HTTP_CLIENT
 #define MAX_HTTP_CLIENT  5
