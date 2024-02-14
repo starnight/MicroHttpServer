@@ -131,6 +131,9 @@ int _CheckFieldSep(char *buf) {
 	return i;
 }
 
+/* Max length of HTTP method adds 1 for space */
+#define MAX_HTTP_METHOD_LEN	(6 + 1)
+
 HTTPMethod HaveMethod(char *method) {
 	HTTPMethod m;
 
@@ -188,21 +191,33 @@ int _ParseHeader(HTTPReq *hr) {
 
 	DebugMsg("\tParse Header\n");
 	p = (char *)req->_buf;
+	memset(p, 0, MAX_HEADER_SIZE + MAX_BODY_SIZE);
 	/* GET, PUT ... and a white space are 3 charaters. */
 	n = recv(clisock, p, 3, 0);
 	if(n == 3) {
 		/* Parse method. */
 		for(i = 3; n>0; i++) {
 			n = recv(clisock, p + i, 1, 0);
+			if(n == -EAGAIN || n == -EWOULDBLOCK) {
+				n = 1;
+				i--;
+				continue;
+			} else if (n <= 0) {
+				return 0;
+			}
+
 			if(p[i] == ' ') {
 				p[i] = '\0';
+				i += 1;
 				break;
 			}
+
+			if(i > MAX_HTTP_METHOD_LEN - 2)
+				return 0;
 		}
 		req->Header.Method = HaveMethod(p);
 
 		/* Parse URI. */
-		if(n > 0) i += 1;
 		req->Header.URI = p + i;
 		for(; n>0; i++) {
 			n = recv(clisock, p + i, 1, 0);
