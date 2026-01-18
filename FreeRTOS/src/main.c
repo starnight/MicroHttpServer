@@ -47,14 +47,19 @@ void MicroHTTPServer_task() {
 	AddRoute(HTTP_POST, "/fib", Fib);
 	AddRoute(HTTP_POST, "/led", LED);
 	USART_Printf(USART2, "Going to start Micro HTTP Server.\r\n");
-	HTTPServerInit(&srv, MHS_PORT);
-	USART_Printf(USART2, "Micro HTTP Server started and listening.\r\n");
-	while(1) {
-		HTTPServerRun(&srv, Dispatch);
-		/* Reschedule after each HTTP server run turn. */
-		vTaskDelay(10);
+	if (HTTPServerInit(&srv, MHS_PORT) < 0) {
+		USART_Printf(USART2, "Micro HTTP Server initialzation failed.\r\n");
 	}
-	HTTPServerClose(&srv);
+	else
+	{
+		USART_Printf(USART2, "Micro HTTP Server started and listening.\r\n");
+		while(1) {
+			HTTPServerRun(&srv, Dispatch);
+			/* Reschedule after each HTTP server run turn. */
+			vTaskDelay(10);
+		}
+		HTTPServerClose(&srv);
+	}
 
 	vTaskDelete(NULL);
 }

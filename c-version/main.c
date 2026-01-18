@@ -21,7 +21,8 @@ int main(void) {
 	AddRoute(HTTP_GET, "/", HelloPage);
 	AddRoute(HTTP_POST, "/fib", Fib);
 	/* Initial the HTTP server and make it listening on MHS_PORT. */
-	HTTPServerInit(&srv, MHS_PORT);
+	if (HTTPServerInit(&srv, MHS_PORT) < 0)
+		return -1;
 	/* Run the HTTP server forever. */
 	/* Run the dispatch callback if there is a new request */
 	HTTPServerRunLoop(&srv, Dispatch);
