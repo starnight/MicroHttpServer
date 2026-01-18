@@ -36,13 +36,14 @@ HTTPReq http_req[MAX_HTTP_CLIENT];
 uint8_t req_buf[MAX_HTTP_CLIENT][MAX_HEADER_SIZE + MAX_BODY_SIZE];
 uint8_t res_buf[MAX_HTTP_CLIENT][MAX_HEADER_SIZE + MAX_BODY_SIZE];
 
-void HTTPServerInit(HTTPServer *srv, uint16_t port) {
+int HTTPServerInit(HTTPServer *srv, uint16_t port) {
 	struct sockaddr_in srv_addr;
 	unsigned int i;
 
 	/* Have a server socket. */
 	srv->sock = socket(AF_INET, SOCK_STREAM, 0);
-	if(srv->sock <= 0) exit(1);
+	if(srv->sock < 0)
+		return -1;
 	/* Set server address. */
 	memset(&srv_addr, 0, sizeof(srv_addr));
 	srv_addr.sin_family = AF_INET;
@@ -52,7 +53,8 @@ void HTTPServerInit(HTTPServer *srv, uint16_t port) {
 	setsockopt(srv->sock, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
 	/* Bind the server socket with the server address. */
 	if(bind(srv->sock, (struct sockaddr*) &srv_addr, sizeof(srv_addr)) == -1) {
-		exit(1);
+		HTTPServerClose(srv);
+		return -1;
 	}
 	/* Set the server socket non-blocking. */
 	fcntl(srv->sock, F_SETFL, O_NONBLOCK);
@@ -75,6 +77,7 @@ void HTTPServerInit(HTTPServer *srv, uint16_t port) {
 		http_req[i].clisock = -1;
 		http_req[i].work_state = NOTWORK_SOCKET;
 	}
+	return 0;
 }
 
 void _HTTPServerAccept(HTTPServer *srv) {
@@ -385,6 +388,9 @@ void HTTPServerRun(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 	struct timeval timeout = {0, 0};
 	uint16_t i;
 
+	if (srv->sock < 0)
+		return;
+
 	/* Copy master socket queue to readable, writeable socket queue. */
 	readable = srv->_read_sock_pool;
 	writeable = srv->_write_sock_pool;
@@ -426,8 +432,11 @@ void HTTPServerRun(HTTPServer *srv, HTTPREQ_CALLBACK callback) {
 }
 
 void HTTPServerClose(HTTPServer *srv) {
+	if (srv->sock < 0)
+		return;
 	shutdown(srv->sock, SHUT_RDWR);
 	close((srv)->sock);
+	srv->sock = -1;
 }
 
 #ifdef MICRO_HTTP_SERVER_EXAMPLE
