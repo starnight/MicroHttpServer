@@ -42,7 +42,7 @@ void HTTPServerInit(HTTPServer *srv, uint16_t port) {
 
 	/* Have a server socket. */
 	srv->sock = socket(AF_INET, SOCK_STREAM, 0);
-	if(srv->sock <= 0) exit(1);
+	if(srv->sock < 0) exit(1);
 	/* Set server address. */
 	memset(&srv_addr, 0, sizeof(srv_addr));
 	srv_addr.sin_family = AF_INET;
